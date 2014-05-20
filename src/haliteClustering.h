@@ -121,7 +121,7 @@ class haliteClustering {
       haliteClustering (double ** objectsArray, FILE *database,
 							   int normalizeFactor,
                                int centralConvolutionValue, int neighbourhoodConvolutionValue,
-                               double pThreshold, int H, int hardClustering, int initialLevel, DBTYPE dbType, char memory);
+                               double pThreshold, int H, int hardClustering, int initialLevel, DBTYPE dbType, char memory, int DIM, int SIZE);
 
       /**
       * Disposes the allocated memory.
@@ -190,6 +190,15 @@ class haliteClustering {
 	  }//end getTimeNormalization
 
    private:
+ 	/**
+	  * Dimension of data
+	  */
+	int DIM;
+	
+	 /**
+	  * Size of data
+	  */
+	int SIZE;
 	
 	  /**
 	  * Time spent in the normalization.

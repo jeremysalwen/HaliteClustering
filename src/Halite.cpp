@@ -93,9 +93,6 @@
 // global variables
 clock_t startTime;
 DBTYPE dbType = DB_HASH; //DB_HASH or DB_BTREE
-char memory = 2; // 0: unlimited
-                 // 1: limited
-                 // 2: none
 
 /**
  * Initiates the measurement of run time.
@@ -122,8 +119,8 @@ int main(int argc, char **argv) {
 	initClock(); // initiates the meassurement of run time
 	
 	// first validations
-	if (argc != 5) {
-		printf("Usage: Halite <pThreshold> <H> <hardClustering> <initialLevel>\n");
+	if (argc != 8) {
+		printf("Usage: Halite <pThreshold> <H> <hardClustering> <initialLevel> <dim> <numPoints> <memoryMode>\n");
 		return 1; //error
 	}//end if
 	
@@ -132,6 +129,12 @@ int main(int argc, char **argv) {
 		return 1; //error
 	}//end if
 	
+	char memory=atoi(argv[7]);
+	if (memory<0 || memory >2) {
+		printf("Possible memory modes are 0: unlimited, 1: limited 2: none\n");
+		return 1;
+	}//end if
+
 	// opens/creates the used files
 	FILE *database, *result;
     database=fopen(INPUT, "r");
@@ -141,19 +144,23 @@ int main(int argc, char **argv) {
 		return 1; //error
 	}//end if
 	
+	//dimension of the data
+	int DIM = atoi(argv[5]);
+	int SIZE= atoi(argv[6]);
+
 	double **objectsArray = 0;
 	if (memory == 0) { //unlimited memory
 		// reads objects from the source database
 		objectsArray = new double*[SIZE];
 		for (int i=0; i<SIZE; i++) {
 			objectsArray[i] = new double[DIM];
-			readPoint(database, objectsArray[i]);
+			readPoint(database, objectsArray[i],DIM);
 		}//end for
 	}
 
 	// creates an object of the class haliteClustering
     haliteClustering *sCluster = new haliteClustering(objectsArray, database, NORMALIZE_FACTOR, 
-										   (2*DIM), -1, atof(argv[1]), atoi(argv[2]), atoi(argv[3]), atoi(argv[4]), dbType, memory);		
+										   (2*DIM), -1, atof(argv[1]), atoi(argv[2]), atoi(argv[3]), atoi(argv[4]), dbType, memory, DIM, SIZE);		
 	
 	printf("The tree was built.\n");
 	printElapsed(); // prints the elapsed time
@@ -196,7 +203,7 @@ int main(int argc, char **argv) {
 	}
 	if (atoi(argv[3])) { //hard clustering
 		for (int point=0; point < SIZE; point++) {
-			(memory == 0) ? copyPoint(objectsArray[point], onePoint) : readPoint(database, onePoint);
+			(memory == 0) ? copyPoint(objectsArray[point], onePoint, DIM) : readPoint(database, onePoint, DIM);
 			strcpy(line,""); // empty line
 			belongsTo=0;
 			for (betaCluster=0; (!belongsTo) && betaCluster < numBetaClusters; betaCluster++) {
@@ -219,7 +226,7 @@ int main(int argc, char **argv) {
 	} else { //soft clustering
 		int outlier;
 		for (int point=0; point < SIZE; point++) {
-			(memory == 0) ? copyPoint(objectsArray[point], onePoint) : readPoint(database, onePoint);
+			(memory == 0) ? copyPoint(objectsArray[point], onePoint, DIM) : readPoint(database, onePoint, DIM);
 			outlier = 1;
 			for (betaCluster=0; betaCluster < numBetaClusters; betaCluster++) {
 				belongsTo=1;

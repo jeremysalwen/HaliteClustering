@@ -80,7 +80,7 @@
 /**
  * Reads a point from the dataset.
  */
-void readPoint(FILE *database, double *point) { 
+void readPoint(FILE *database, double *point, int DIM) { 
 	int id;
 	//fscanf(database,"%d",&id); // discarts the point id
 	for (int j=0; j<DIM; j++) {
@@ -92,7 +92,7 @@ void readPoint(FILE *database, double *point) {
 /**
  * Copy a point.
  */
-void copyPoint(double *point, double *copy) { 
+void copyPoint(double *point, double *copy, int DIM) { 
 	memcpy(copy, point, DIM*sizeof(double));
 }//end copyPoint
 

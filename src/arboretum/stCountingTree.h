@@ -6,16 +6,18 @@
 
 class stCountingTree {
 public:
-	stCountingTree(int H, DBTYPE dbType, char dbDisk) {
+	stCountingTree(int H, DBTYPE dbType, char dbDisk, int DIM): P(DIM) {
 		//empty tree
 		this->H = H;
-		sumOfPoints = 0;		
-		normalizeSlope = new double[DIM];
-		normalizeYInc = new double[DIM];
-		P = new int[DIM];
+		sumOfPoints = 0;
+
+		normalizeSlope=new double[DIM];	
+		normalizeYInc=new double[DIM];	
+
 		for (int i=0; i<DIM; i++) {
 			normalizeSlope[i] = 1;
-			normalizeYInc[i] = P[i] = 0;
+			normalizeYInc[i] = 0;
+			//P[i] = 0; Default initializer already does this
 		}
 		
 		//create/open one dataset per tree level
@@ -78,25 +80,24 @@ public:
 		delete [] levels;
 		delete [] normalizeSlope;
 		delete [] normalizeYInc;
-		delete [] P;
 	}
 	
 	char insertPoint(double *point, double *normPoint) {
-		int nPos = (int) ceil((double)DIM/8);
+		int nPos = (int) ceil((double)P.size()/8);
 		
 		//creates used arrays
-		double *min = new double[DIM];
-		double *max = new double[DIM];
+		double *min = new double[P.size()];
+		double *max = new double[P.size()];
 		unsigned char *fullId = new unsigned char[(H-1)*nPos];
 		memset(fullId, 0, (H-1)*nPos);
 		stCell **cellAndParents = new stCell*[H-1];
 		for (int i=0; i<H-1; i++) {
-			cellAndParents[i] = new stCell();
+			cellAndParents[i] = stCell::create(P.size());
 		}
 		
 		// normalizes the point
 		char out = 0;
-		for (int i=0; i<DIM; i++) {
+		for (int i=0; i<P.size(); i++) {
 		    normPoint[i] = (point[i]-normalizeYInc[i])/normalizeSlope[i];
 		    if (normPoint[i] < 0 || normPoint[i] > 1) {
 				out = 1; // invalid point
@@ -113,7 +114,7 @@ public:
 		
 		//deletes used memory
 		for (int i=0; i<H-1; i++) {
-			delete cellAndParents[i];
+			cellAndParents[i]->destroy();
 		}
 		delete [] cellAndParents;
 		delete [] min;
@@ -137,10 +138,10 @@ public:
 		return sumOfPoints;
 	}
 	int *getP() {
-		return P;
+		return &P[0];
 	}
 	int findInNode(stCell **parents, stCell **cell, stCellId *id, int level) {
-		int nPos = (int) ceil((double)DIM/8);
+		int nPos = (int) ceil((double)P.size()/8);
 		unsigned char *fullId = new unsigned char[(level+1)*nPos];
         memset(fullId, 0, (level+1)*nPos);
 		
@@ -152,18 +153,18 @@ public:
 		//search the cell in current level
 		Dbt searchKey(fullId,(level+1)*nPos), searchData;
 		searchData.set_data(*cell);
-		searchData.set_ulen(sizeof(stCell));
+		searchData.set_ulen(stCell::sizeOf(P.size())); //Dynamically finds the size of an stCell with dimension P.size()
 		searchData.set_flags(DB_DBT_USERMEM);
 		char found = (levels[level]->get(NULL, &searchKey, &searchData, 0) != DB_NOTFOUND);
 		if (found) {
-			(*cell)->setId(id);
+			(*cell)->setId(id,P.size());
 		}
 		
 		delete [] fullId;
 		return found;
 	}
 	void setNormalizationVectors(double *slope, double *yInc) {
-		for (int i=0; i<DIM; i++) {
+		for (int i=0; i<P.size(); i++) {
             normalizeSlope[i] = slope[i];
             normalizeYInc[i] = yInc[i];
 		}
@@ -174,7 +175,7 @@ public:
 		}
 	}
 	void commitCell(stCell **parents, stCell *cell, int level) {
-		int nPos = (int) ceil((double)DIM/8);
+		int nPos = (int) ceil((double)P.size()/8);
 		unsigned char *fullId = new unsigned char[(level+1)*nPos];
         memset(fullId, 0, (level+1)*nPos);
 		
@@ -185,25 +186,25 @@ public:
 
 		// insert/update the dataset
 		Dbt key(fullId,(level+1)*nPos);
-		Dbt data(cell,sizeof(stCell));
+		Dbt data(cell,stCell::sizeOf(P.size())); //Dynamically finds the size of an stCell with dimension P.size()
 		levels[level]->put(NULL, &key, &data, 0);
 		
 		delete [] fullId;
 	}
 	void findParents(unsigned char *fullId, stCell **parentsVector, int level){
-		int nPos = (int) ceil((double)DIM/8);
+		int nPos = (int) ceil((double)P.size()/8);
 		Dbt searchKey, searchData;
 		searchKey.set_data(fullId);
-		searchData.set_ulen(sizeof(stCell));
+		searchData.set_ulen(stCell::sizeOf(P.size())); //Dynamically finds the size of an stCell with dimension P.size()
 		searchData.set_flags(DB_DBT_USERMEM);		
-		stCellId *id = new stCellId();
+		stCellId *id = new stCellId(P.size());
 		for (int l=0; l<level; l++) {
 			//search the parent in level l
 			searchKey.set_size((l+1)*nPos);
 			searchData.set_data(parentsVector[l]);
 			levels[l]->get(NULL, &searchKey, &searchData, 0); //search
 			id->setIndex(fullId+(l*nPos));
-			parentsVector[l]->setId(id); //copy the id
+			parentsVector[l]->setId(id,P.size()); //copy the id
 		}
 	    delete id;
 	}
@@ -214,12 +215,12 @@ private:
 		    // mounts the id of the cell that covers point in the current level
 		    // and stores in min/max this cell's lower and upper bounds
 		    double middle;
-		    stCellId *cellId = new stCellId();
-		    for (int i=0; i<DIM; i++) {
+		    stCellId *cellId = new stCellId(P.size());
+		    for (int i=0; i<P.size(); i++) {
 				middle = (max[i]-min[i])/2 + min[i];
 				if (point[i] > middle) { // if point[i] == middle, considers that the point
 					                     // belongs to the cell in the lower half regarding i
-					cellId->invertBit(i); // turns the bit i to one
+					cellId->invertBit(i,P.size()); // turns the bit i to one
 					min[i] = middle;
 				} else {
 					// the bit i remains zero
@@ -229,23 +230,23 @@ private:
 			
 			// updates the half space counts in level-1
 			if (!level) { // updates in the root (level == 0)
-				for (int i=0; i<DIM; i++) {
-					if (!cellId->getBitValue(i)) {
+				for (int i=0; i<P.size(); i++) {
+					if (!cellId->getBitValue(i,P.size())) {
 						P[i]++; // counts the point, since it is in the root's lower half regarding i
 					}
 				}
 			} else { // updates in the father (level > 0)
-				cellAndParents[level-1]->insertPointPartial(cellId);
+				cellAndParents[level-1]->insertPointPartial(cellId,P.size());
 			}
 			
 			// mounts the full id for the current cell
-			int nPos = (int) ceil((double)DIM/8);
+			int nPos = (int) ceil((double)P.size()/8);
 			cellId->getIndex(fullId+(level*nPos));
 			
 			//searchs the cell in current level
 			Dbt searchKey(fullId,(level+1)*nPos), searchData;
 			searchData.set_data(cellAndParents[level]);
-			searchData.set_ulen(sizeof(stCell));
+			searchData.set_ulen(stCell::sizeOf(P.size()));//Dynamically finds the size of an stCell with dimension P.size()
 			searchData.set_flags(DB_DBT_USERMEM);
 			levels[level]->get(NULL, &searchKey, &searchData, 0);
 			
@@ -258,19 +259,19 @@ private:
 			
 			// insert/update the dataset
 			Dbt key(fullId,(level+1)*nPos);
-			Dbt data(cellAndParents[level],sizeof(stCell));
+			Dbt data(cellAndParents[level],stCell::sizeOf(P.size()));
 			levels[level]->put(NULL, &key, &data, 0);
 			
 			delete cellId; //cellId will not be used anymore
 		}
 	}      
 	
-	int *P;
+	std::vector<int> P;
 	int sumOfPoints;
 	int H;
 	Db **levels;
-	double *normalizeSlope;
-	double *normalizeYInc;
+	double * normalizeSlope;
+	double * normalizeYInc;
 };
 
 #endif //__STCOUNTINGTREE_H

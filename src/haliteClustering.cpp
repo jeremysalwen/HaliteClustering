@@ -78,15 +78,17 @@
 
 haliteClustering::haliteClustering (double **objectsArray, FILE *database, int normalizeFactor, int centralConvolutionValue, 
 												  int neighbourhoodConvolutionValue, double pThreshold, int H, int hardClustering, 
-												  int initialLevel, DBTYPE dbType, char memory) {
+												  int initialLevel, DBTYPE dbType, char memory, int DIM, int SIZE) {
 
-    // stores H, hardClustering and initialLevel
+    // stores DIM, H, hardClustering and initialLevel
+this->DIM=DIM;
+this->SIZE=SIZE;
     this->H = H;
 	this->hardClustering = hardClustering;
 	this->initialLevel = initialLevel;
 
     // builds the counting tree and inserts objects on it
-    calcTree = new stCountingTree(H, dbType, (memory==2));
+    calcTree = new stCountingTree(H, dbType, (memory==2),DIM);
     fastDistExponent(objectsArray, database, normalizeFactor, memory);
 
     // builds vectors to describe the positions of a cluster center in the data space
@@ -97,8 +99,8 @@ haliteClustering::haliteClustering (double **objectsArray, FILE *database, int n
     betaClusterCenterParents = new stCell*[H];
     neighbourParents = new stCell*[H];
 	for (int i=0; i<H; i++) {
-		betaClusterCenterParents[i] = new stCell();
-        neighbourParents[i] = new stCell();
+		betaClusterCenterParents[i] = stCell::create(DIM);
+        neighbourParents[i] = stCell::create(DIM);
 	}
 
     // builds auxiliar vectors used to search for the relevant attributes
@@ -135,8 +137,8 @@ haliteClustering::haliteClustering (double **objectsArray, FILE *database, int n
     }//end for
 	
 	//create memory space for neighbour and betaClusterCenter
-	neighbour = new stCell();
-	betaClusterCenter = new stCell();
+	neighbour = stCell::create(DIM);
+	betaClusterCenter = stCell::create(DIM);
 
 }//end haliteClustering::haliteClustering
 
@@ -144,16 +146,16 @@ haliteClustering::haliteClustering (double **objectsArray, FILE *database, int n
 haliteClustering::~haliteClustering() {
 
     // disposes the used structures
-	delete neighbour;
-	delete betaClusterCenter;
+	neighbour->destroy();
+	betaClusterCenter->destroy();
     delete [] neighbourhood;    
     delete [] attributesRelevance;
     delete [] minBetaClusterCenter;
     delete [] maxBetaClusterCenter;
 	delete [] correlationClustersBelongings;
 	for (int i=0; i<H; i++) {
-		delete betaClusterCenterParents[i];
-        delete neighbourParents[i];
+		betaClusterCenterParents[i]->destroy();
+        	neighbourParents[i]->destroy();
 	}
     delete [] betaClusterCenterParents;
     delete [] neighbourParents;
@@ -192,16 +194,16 @@ void haliteClustering::findCorrelationClusters() {
 		  calcTree->commitCell(betaClusterCenterParents, betaClusterCenter, level); // commit changes in the tree
 		  if (level) {
 			// pointer to a neighbour of the father
-			stCell *fatherNeighbour = new stCell();	
+			stCell *fatherNeighbour = stCell::create(DIM);	
 			stCell **cellP = new stCell*[level-1];
 			for (int j=0;j<level-1;j++) {
-				cellP[j] = new stCell();
+				cellP[j] = stCell::create(DIM);
 			}//end for
 			for (int i=0; i<DIM; i++) {			   
 	  			// initiates total with the number of points in the father
 				total=betaClusterCenterParents[level-1]->getSumOfPoints();
 				// discovers the number of points in the center
-				if (betaClusterCenter->getId()->getBitValue(i)) {
+				if (betaClusterCenter->getId()->getBitValue(i,DIM)) {
   				  center = total - betaClusterCenterParents[level-1]->getP(i);
 				} else {
 				  center = betaClusterCenterParents[level-1]->getP(i);
@@ -214,7 +216,7 @@ void haliteClustering::findCorrelationClusters() {
 				
 				//copy parents
 				for (int j=0;j<level-1;j++) {
-					betaClusterCenterParents[j]->copy(cellP[j]);
+					betaClusterCenterParents[j]->copy(cellP[j],DIM);
 				}//end for
 				
                 // looks for the external neighbour
@@ -230,9 +232,9 @@ void haliteClustering::findCorrelationClusters() {
 				  ok=1; // new cluster found
 				}//end if
 			}//end for
-			delete fatherNeighbour;
+			fatherNeighbour->destroy();
 			for (int j=0;j<level-1;j++) {
-				delete cellP[j];
+				cellP[j]->destroy();
 			}//end for
 			delete [] cellP;
 		  } else { // analyzes each dimension based on the points distribution of the entire database
@@ -240,7 +242,7 @@ void haliteClustering::findCorrelationClusters() {
 				total=calcTree->getSumOfPoints();			
 				for (int i=0; i<DIM; i++) {			   
 					// discovers the number of points in the center
-					if (betaClusterCenter->getId()->getBitValue(i)) {
+					if (betaClusterCenter->getId()->getBitValue(i,DIM)) {
 						center = total - calcTree->getP()[i];
 					} else {
 						center = calcTree->getP()[i];
@@ -302,7 +304,7 @@ void haliteClustering::findCorrelationClusters() {
 
             // looks for the external neighbour
             for (int j=0;j<level;j++) {
-			    betaClusterCenterParents[j]->copy(neighbourParents[j]);	
+			    betaClusterCenterParents[j]->copy(neighbourParents[j],DIM);	
 			}//end for
             if (externalNeighbour(i,betaClusterCenter,&neighbour,betaClusterCenterParents,neighbourParents,level)) { // analyzes external neighbour to decide if it belongs to the cluster
               if (neighbourhood[i] == 'N') {
@@ -419,7 +421,7 @@ int haliteClustering::walkThroughConvolution(int level) {
 		// pointers to the parents of a cell
 		stCell **parentsVector = new stCell*[level];
 		for (int i=0;i<level;i++) {
-			parentsVector[i] = new stCell();
+			parentsVector[i] = stCell::create(DIM);
 		}//end for
 	    
 		//prepare the fullId array
@@ -431,14 +433,14 @@ int haliteClustering::walkThroughConvolution(int level) {
 		
 		//prepare the cell and the Dbts to receive 
 		//key/data pairs from the dataset 
-		stCell *cell = new stCell();
-		stCellId *id = new stCellId();
+		stCell *cell = stCell::create(DIM);
+		stCellId *id = new stCellId(DIM);
 		Dbt searchKey, searchData;
 		searchKey.set_data(fullId);
 		searchKey.set_ulen((level+1)*nPos);
 		searchKey.set_flags(DB_DBT_USERMEM);
 		searchData.set_data(cell);
-		searchData.set_ulen(sizeof(stCell));
+		searchData.set_ulen(stCell::sizeOf(DIM));
 		searchData.set_flags(DB_DBT_USERMEM);
 		
 		// Get a cursor
@@ -464,7 +466,7 @@ int haliteClustering::walkThroughConvolution(int level) {
 											   (memcmp(fullId, ccFullId, (level+1)*nPos) < 0) ) ) ) {
 				//set id for cell
 				id->setIndex(fullId+(level*nPos)); //copy from fullId to id
-				cell->setId(id); //copy from id to cell->id
+				cell->setId(id,DIM); //copy from id to cell->id
 				//finds the parents of cell
 				calcTree->findParents(fullId,parentsVector,level);
 				// discovers the position of cell in the data space
@@ -494,9 +496,9 @@ int haliteClustering::walkThroughConvolution(int level) {
 						// cell and its parents to betaClusterCenter and its parents
 						biggestConvolutionValue = newConvolutionValue;
 						memcpy(ccFullId, fullId, (level+1)*nPos);
-						cell->copy(betaClusterCenter);
+						cell->copy(betaClusterCenter,DIM);
 						for (int j=0;j<level;j++) {
-							parentsVector[j]->copy(betaClusterCenterParents[j]);
+							parentsVector[j]->copy(betaClusterCenterParents[j],DIM);
 						}//end for
 					}//end if
 				}//end if
@@ -515,12 +517,12 @@ int haliteClustering::walkThroughConvolution(int level) {
 		// disposes the used memory
 		delete [] minCell;
 		delete [] maxCell;
-		delete cell;
+		cell->destroy();
 		delete id;
 		delete [] fullId;
 		delete [] ccFullId;
 		for (int i=0;i<level;i++) {
-			delete parentsVector[i];
+			parentsVector[i]->destroy();
 		}//end for
 		delete [] parentsVector;
 		
@@ -532,10 +534,10 @@ int haliteClustering::walkThroughConvolution(int level) {
 //---------------------------------------------------------------------------
 int haliteClustering::applyConvolution(stCell *cell, stCell **cellParents, int level) {
 
-  stCell *neighbour = new stCell();
+  stCell *neighbour = stCell::create(DIM);
   stCell **neighbourParents = new stCell*[level];
   for (int j=0;j<level;j++) {
-	  neighbourParents[j] = new stCell();
+	  neighbourParents[j] = stCell::create(DIM);
   }//end for
   int newValue = cell->getSumOfPoints()*centralConvolutionValue;
   // looks for the neighbours
@@ -546,16 +548,16 @@ int haliteClustering::applyConvolution(stCell *cell, stCell **cellParents, int l
 	
 	//copy parents
 	for (int j=0;j<level;j++) {
-	   cellParents[j]->copy(neighbourParents[j]);
+	   cellParents[j]->copy(neighbourParents[j],DIM);
 	}//end for
 	  
     if (externalNeighbour(k,cell,&neighbour,cellParents,neighbourParents,level)) {
 		newValue+=(neighbour->getSumOfPoints()*neighbourhoodConvolutionValue);
 	}//end if
   }//end for
-  delete neighbour;
+  neighbour->destroy();
   for (int j=0;j<level;j++) {
-	  delete neighbourParents[j];
+	  neighbourParents[j]->destroy();
   }//end for
   delete [] neighbourParents;	
   // return the cell value after applying the convolution matrix
@@ -571,7 +573,7 @@ void haliteClustering::cellPosition(stCell *cell, stCell **cellParents,
     if (level) {
       cellPosition(cellParents[level-1],cellParents,min,max,level-1);
       for (int i=0; i<DIM; i++) {
-        if (cell->getId()->getBitValue(i)) { // bit in the position i is 1
+        if (cell->getId()->getBitValue(i,DIM)) { // bit in the position i is 1
           min[i] += ((max[i]-min[i])/2);
         } else { // bit in the position i is 0
           max[i] -= ((max[i]-min[i])/2);
@@ -579,7 +581,7 @@ void haliteClustering::cellPosition(stCell *cell, stCell **cellParents,
       }//end for
     } else { // level zero
       for (int i=0; i<DIM; i++) {
-        if (cell->getId()->getBitValue(i)) { // bit in the position i is 1
+        if (cell->getId()->getBitValue(i,DIM)) { // bit in the position i is 1
           min[i] = 0.5;
           max[i] = 1;
         } else { // bit in the position i is 0
@@ -599,13 +601,13 @@ void haliteClustering::cellPositionDimensionE_j(stCell *cell, stCell **cellParen
   if (cell) {
     if (level) {
       cellPositionDimensionE_j(cellParents[level-1],cellParents,min,max,level-1,j);      
-      if (cell->getId()->getBitValue(j)) { // bit in the position j is 1
+      if (cell->getId()->getBitValue(j,DIM)) { // bit in the position j is 1
         *min += ((*max-*min)/2);
       } else { // bit in the position j is 0
         *max -= ((*max-*min)/2);
       }//end if      
     } else { // level zero
-      if (cell->getId()->getBitValue(j)) { // bit in the position j is 1
+      if (cell->getId()->getBitValue(j,DIM)) { // bit in the position j is 1
         *min = 0.5;
         *max = 1;
       } else { // bit in the position j is 0
@@ -623,7 +625,7 @@ int haliteClustering::externalNeighbour(int dimIndex, stCell *cell, stCell **nei
    if (level) {
 	 int found;
      stCell *father = cellParents[level-1];
-     if (cell->getId()->getBitValue(dimIndex) ^ father->getId()->getBitValue(dimIndex)) { // XOR - different bit values -> starts going down in the tree
+     if (cell->getId()->getBitValue(dimIndex,DIM) ^ father->getId()->getBitValue(dimIndex,DIM)) { // XOR - different bit values -> starts going down in the tree
 	   //finds the internal neighbour of the father
 	   found = internalNeighbour(dimIndex, father, &neighbourParents[level-1], cellParents, level-1);
      } else {  // equal bit values -> continues going up in the tree
@@ -645,9 +647,9 @@ int haliteClustering::internalNeighbour(int dimIndex, stCell *cell, stCell **nei
 											   stCell **cellParents, int level) {
 
   // creates the id that the neighbour should have
-  stCellId *neighboursId = new stCellId();
+  stCellId *neighboursId = new stCellId(DIM);
   *neighboursId=*cell->getId();
-  neighboursId->invertBit(dimIndex);
+  neighboursId->invertBit(dimIndex,DIM);
   int found = calcTree->findInNode(cellParents, neighbour, neighboursId, level);
   delete neighboursId;
   return found;
@@ -711,7 +713,7 @@ void haliteClustering::fastDistExponent(double **objectsArray, FILE *database, i
       fseek(database,0,SEEK_SET); //go to the file begin
    }
    for (int i=0; i<SIZE; i++) {
-	 (memory == 0) ? copyPoint(objectsArray[i], onePoint) : readPoint(database, onePoint);
+	 (memory == 0) ? copyPoint(objectsArray[i], onePoint,DIM) : readPoint(database, onePoint, DIM);
 	 calcTree->insertPoint(onePoint,resultPoint); //add to the grid structure
    }//end for
 
@@ -739,7 +741,7 @@ void haliteClustering::minMax(double **objectsArray, FILE *database, double *min
     fseek(database,0,SEEK_SET); //go to the file begin
   }
   for (int i=0; i<SIZE; i++) {
-	(memory == 0) ? copyPoint(objectsArray[i], onePoint) : readPoint(database, onePoint);  
+	(memory == 0) ? copyPoint(objectsArray[i], onePoint,DIM) : readPoint(database, onePoint, DIM);  
     for (int j=0; j<DIM; j++) {
       if (onePoint[j] < min[j]) {
         min[j] = onePoint[j];
@@ -927,7 +929,7 @@ cv::Mat haliteClustering::inputPCA(int i, int j, int *clusterSize) {
 	// pointers to the parents of a cell
 	stCell **parentsVector = new stCell*[level];
 	for (int k=0;k<level;k++) {
-		parentsVector[k] = new stCell();
+		parentsVector[k] = stCell::create(DIM);
 	}//end for
 	
 	//prepare the fullId array
@@ -937,8 +939,8 @@ cv::Mat haliteClustering::inputPCA(int i, int j, int *clusterSize) {
 	
 	//prepare the cell and the Dbts to receive 
 	//key/data pairs from the dataset 
-	stCell *cell = new stCell();
-	stCellId *id = new stCellId();
+	stCell *cell = stCell::create(DIM);
+	stCellId *id = new stCellId(DIM);
 	Dbt searchKey, searchData;
 	searchKey.set_data(fullId);
 	searchKey.set_ulen((level+1)*nPos);
@@ -962,7 +964,7 @@ cv::Mat haliteClustering::inputPCA(int i, int j, int *clusterSize) {
 	while ((ret = cursorp->get(&searchKey, &searchData, DB_NEXT)) == 0) {
 		//set id for cell
 		id->setIndex(fullId+(level*nPos)); //copy from fullId to id
-		cell->setId(id); //copy from id to cell->id
+		cell->setId(id,DIM); //copy from id to cell->id
 		//finds the parents of cell
 		calcTree->findParents(fullId,parentsVector,level);
 		// discovers the position of cell in the data space
@@ -1018,11 +1020,11 @@ cv::Mat haliteClustering::inputPCA(int i, int j, int *clusterSize) {
 	delete [] cluster;
 	delete [] minCell;
 	delete [] maxCell;
-	delete cell;
+	cell->destroy();
 	delete id;
 	delete [] fullId;
 	for (int k=0;k<level;k++) {
-		delete parentsVector[k];
+		parentsVector[k]->destroy();
 	}//end for
 	delete [] parentsVector;
 	
