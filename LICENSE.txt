@@ -1,0 +1,12 @@
+
+
+
+    MrCC
+    Copyright (c) 2009
+    Robson L. F. Cordeiro, Agma J. M. Traina, Christos Faloutsos and Caetano Traina Jr.
+    All Rights Reserved
+
+
+
+You may use this code without fee, for educational and research purposes.
+Any for-profit use requires written consent of the copyright holders.
