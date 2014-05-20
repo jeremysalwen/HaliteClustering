@@ -123,12 +123,12 @@ int main(int argc, char **argv) {
 	
 	// first validations
 	if (argc != 5) {
-		printf("Usage: Halite <pThreshold> <H> <hardClustering> <initialLevel>");
+		printf("Usage: Halite <pThreshold> <H> <hardClustering> <initialLevel>\n");
 		return 1; //error
 	}//end if
 	
 	if (atoi(argv[2]) < 2) {
-		printf("Halite needs at least two resolution levels (H >= 2) to perform the clustering process.");
+		printf("Halite needs at least two resolution levels (H >= 2) to perform the clustering process.\n");
 		return 1; //error
 	}//end if
 	
@@ -137,7 +137,7 @@ int main(int argc, char **argv) {
     database=fopen(INPUT, "r");
 	result=fopen(OUTPUT, "w");
 	if (!(database&&result)) {
-		printf("Halite could not open the database file or create the result file.");
+		printf("Halite could not open the database file or create the result file.\n");
 		return 1; //error
 	}//end if
 	
