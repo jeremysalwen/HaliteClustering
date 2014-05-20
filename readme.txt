@@ -1,4 +1,4 @@
-MrCC - basic information
+Halite - basic information
 
 *******************************************************************
 
@@ -13,9 +13,9 @@ axis_1 axis_2 axis_3 ... axis_d groundTruthCluster
 
 Example: databases\12.dat
 
-Obs.: - the groundTruthCluster data is not used by MrCC.
-      - the file databases\12d.sub contains the ground truth WRT the clusters' subspaces for our example dataset, but it's also not used by MrCC.
-      - you may use this ground truth information to evaluate the quality of MrCC's results on our example dataset.
+Obs.: - the groundTruthCluster data is not used by Halite.
+      - the file databases\12d.sub contains the ground truth WRT the clusters' subspaces for our example dataset, but it's also not used by Halite.
+      - you may use this ground truth information to evaluate the quality of Halite's results on our example dataset.
 
 *******************************************************************
 
@@ -42,7 +42,7 @@ Obs.: - relevanceOfAxis_j = 0 means that axis j is irrelevant to the correspondi
 Example: results\result12d.dat
 
 *******************************************************************
-compiling MrCC:
+compiling Halite:
 
 First, you must install two third-part software:
    - Oracle Berkeley DB: "http://www.oracle.com/technetwork/database/berkeleydb/overview/index.html"
@@ -52,9 +52,9 @@ Then, compile the code using any standard c++ compiler.
 
 *******************************************************************
 
-running MrCC:
+running Halite:
 
-MrCC \alpha H hardClustering initialLevel dim memoryMode
+Halite \alpha H hardClustering initialLevel dim memoryMode
 
 Obs.: - the input/output specs are defined in "arboretum/ioSpecs.h".
       - the default value for \alpha is 1e-10.
