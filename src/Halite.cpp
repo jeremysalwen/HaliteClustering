@@ -85,6 +85,7 @@
 #include "haliteClustering.cpp"
 #endif //__GNUG__
 
+#include "PointSource.h"
 
 // default values
 #define TAM_LINE 500
