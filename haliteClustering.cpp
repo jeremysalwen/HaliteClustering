@@ -60,7 +60,7 @@
  */
 /**
 * @file
-* This file implements the class stCorrelationClustering.
+* This file implements the class haliteClustering.
 *
 * @version 1.0
 * @author Robson Leonardo Ferreira Cordeiro (robson@icmc.usp.br)
@@ -71,12 +71,12 @@
 // Copyright (c) 2002-2009 GBDI-ICMC-USP
 
 //------------------------------------------------------------------------------
-// class stCorrelationClustering
+// class haliteClustering
 //------------------------------------------------------------------------------
 
-#include "stCorrelationClustering.h"
+#include "haliteClustering.h"
 
-stCorrelationClustering::stCorrelationClustering (double **objectsArray, FILE *database, int normalizeFactor, int centralConvolutionValue, 
+haliteClustering::haliteClustering (double **objectsArray, FILE *database, int normalizeFactor, int centralConvolutionValue, 
 												  int neighbourhoodConvolutionValue, double pThreshold, int H, int hardClustering, 
 												  int initialLevel, DBTYPE dbType, char memory) {
 
@@ -138,10 +138,10 @@ stCorrelationClustering::stCorrelationClustering (double **objectsArray, FILE *d
 	neighbour = new stCell();
 	betaClusterCenter = new stCell();
 
-}//end stCorrelationClustering::stCorrelationClustering
+}//end haliteClustering::haliteClustering
 
 //---------------------------------------------------------------------------
-stCorrelationClustering::~stCorrelationClustering() {
+haliteClustering::~haliteClustering() {
 
     // disposes the used structures
 	delete neighbour;
@@ -173,10 +173,10 @@ stCorrelationClustering::~stCorrelationClustering() {
 	delete [] levelBetaClusters;	
     delete calcTree;
 
-}//end stCorrelationClustering::~stCorrelationClustering
+}//end haliteClustering::~haliteClustering
 
 //---------------------------------------------------------------------------
-void stCorrelationClustering::findCorrelationClusters() {
+void haliteClustering::findCorrelationClusters() {
 
     // defines when a new cluster is found
     int ok, center, total;
@@ -353,10 +353,10 @@ void stCorrelationClustering::findCorrelationClusters() {
 	mergeBetaClusters(); // merges clusters that share some database space
 	printf("\n%d correlation clusters left after the merging fase.\n",numCorrelationClusters); // prints the number of correlation clusters found
 
-}//end stCorrelationClustering::findCorrelationClusters
+}//end haliteClustering::findCorrelationClusters
 
 //---------------------------------------------------------------------------
-double stCorrelationClustering::calcCThreshold(double *attributesRelevance) {
+double haliteClustering::calcCThreshold(double *attributesRelevance) {
 
   double *sortedRelevance = new double[DIM];
   for (int i=0;i<DIM;i++) {
@@ -367,10 +367,10 @@ double stCorrelationClustering::calcCThreshold(double *attributesRelevance) {
   delete [] sortedRelevance;
   return cThreshold;
 
-}//end stCorrelationClustering::calcCThreshold
+}//end haliteClustering::calcCThreshold
 
 //---------------------------------------------------------------------------
-int stCorrelationClustering::minimumDescriptionLength(double *sortedRelevance) {
+int haliteClustering::minimumDescriptionLength(double *sortedRelevance) {
 
   int cutPoint=-1;
   double preAverage, postAverage, descriptionLength, minimumDescriptionLength;
@@ -408,10 +408,10 @@ int stCorrelationClustering::minimumDescriptionLength(double *sortedRelevance) {
   }//end for
   return cutPoint;
 
-}//end stCorrelationClustering::minimumDescriptionLength
+}//end haliteClustering::minimumDescriptionLength
 
 //---------------------------------------------------------------------------
-int stCorrelationClustering::walkThroughConvolution(int level) {
+int haliteClustering::walkThroughConvolution(int level) {
 		
 	//try to get the db in the current level
 	Db *db = calcTree->getDb(level);
@@ -527,10 +527,10 @@ int stCorrelationClustering::walkThroughConvolution(int level) {
 		return 1; //Success
 	}
 	return 0; //Error
-}//end stCorrelationClustering::walkThroughConvolution
+}//end haliteClustering::walkThroughConvolution
 
 //---------------------------------------------------------------------------
-int stCorrelationClustering::applyConvolution(stCell *cell, stCell **cellParents, int level) {
+int haliteClustering::applyConvolution(stCell *cell, stCell **cellParents, int level) {
 
   stCell *neighbour = new stCell();
   stCell **neighbourParents = new stCell*[level];
@@ -561,10 +561,10 @@ int stCorrelationClustering::applyConvolution(stCell *cell, stCell **cellParents
   // return the cell value after applying the convolution matrix
   return newValue;
 
-}//end stCorrelationClustering::applyConvolution
+}//end haliteClustering::applyConvolution
 
 //---------------------------------------------------------------------------
-void stCorrelationClustering::cellPosition(stCell *cell, stCell **cellParents, 
+void haliteClustering::cellPosition(stCell *cell, stCell **cellParents, 
 										   double *min, double *max, int level) {
 
   if (cell) {
@@ -590,10 +590,10 @@ void stCorrelationClustering::cellPosition(stCell *cell, stCell **cellParents,
     }//end if
   }//end if
 
-}//end stCorrelationClustering::cellPosition
+}//end haliteClustering::cellPosition
 
 //---------------------------------------------------------------------------
-void stCorrelationClustering::cellPositionDimensionE_j(stCell *cell, stCell **cellParents, 
+void haliteClustering::cellPositionDimensionE_j(stCell *cell, stCell **cellParents, 
 													   double *min, double *max, int level, int j) {
 
   if (cell) {
@@ -615,10 +615,10 @@ void stCorrelationClustering::cellPositionDimensionE_j(stCell *cell, stCell **ce
     }//end if
   }//end if
 
-}//end stCorelationClustering::cellPositionDimensionE_j
+}//end haliteClustering::cellPositionDimensionE_j
 
 //---------------------------------------------------------------------------
-int stCorrelationClustering::externalNeighbour(int dimIndex, stCell *cell, stCell **neighbour,
+int haliteClustering::externalNeighbour(int dimIndex, stCell *cell, stCell **neighbour,
 											   stCell **cellParents, stCell **neighbourParents, int level) {
    if (level) {
 	 int found;
@@ -638,10 +638,10 @@ int stCorrelationClustering::externalNeighbour(int dimIndex, stCell *cell, stCel
    }//end if
    return 0; // a cell in level zero never has an external neighbour
 
-}//end stCorrelationClustering::externalNeighbour
+}//end haliteClustering::externalNeighbour
 
 //---------------------------------------------------------------------------
-int stCorrelationClustering::internalNeighbour(int dimIndex, stCell *cell, stCell **neighbour,
+int haliteClustering::internalNeighbour(int dimIndex, stCell *cell, stCell **neighbour,
 											   stCell **cellParents, int level) {
 
   // creates the id that the neighbour should have
@@ -652,10 +652,10 @@ int stCorrelationClustering::internalNeighbour(int dimIndex, stCell *cell, stCel
   delete neighboursId;
   return found;
 
-}//end stCorrelationClustering::internalNeighbour
+}//end haliteClustering::internalNeighbour
 
 //---------------------------------------------------------------------------
-void stCorrelationClustering::fastDistExponent(double **objectsArray, FILE *database, int normalizeFactor, char memory) {
+void haliteClustering::fastDistExponent(double **objectsArray, FILE *database, int normalizeFactor, char memory) {
 
    double *minD, *maxD, biggest;
    double *onePoint, *resultPoint, *a, *b; // y=Ax+B to normalize each dataset.
@@ -723,10 +723,10 @@ void stCorrelationClustering::fastDistExponent(double **objectsArray, FILE *data
    delete[] minD;
    delete[] maxD;
 
-}//end stCorrelationClustering::FastDistExponent
+}//end haliteClustering::FastDistExponent
 
 //---------------------------------------------------------------------------
-void stCorrelationClustering::minMax(double **objectsArray, FILE *database, double *min, double *max, char memory) {
+void haliteClustering::minMax(double **objectsArray, FILE *database, double *min, double *max, char memory) {
 
   timeNormalization = clock(); //start normalization time
   double *onePoint = new double[DIM];
@@ -752,10 +752,10 @@ void stCorrelationClustering::minMax(double **objectsArray, FILE *database, doub
   delete [] onePoint;
   timeNormalization = (clock()-timeNormalization); //total time spent in the normalization
 
-}//end stCorrelationClustering::MinMax
+}//end haliteClustering::MinMax
 
 //---------------------------------------------------------------------------
-void stCorrelationClustering::mergeBetaClusters() {
+void haliteClustering::mergeBetaClusters() {
 
 	int i=0, j, k, aux;
 	// merges beta-clusters
@@ -815,9 +815,9 @@ void stCorrelationClustering::mergeBetaClusters() {
 		}//end for
 	}//end for
 
-}//end stCorrelationClustering::mergeBetaClusters
+}//end haliteClustering::mergeBetaClusters
 
-int stCorrelationClustering::shouldMerge(int i, int j) {
+int haliteClustering::shouldMerge(int i, int j) {
 	
 	// discovers if beta-cluster i shares database space with beta-cluster j
 	int shareSpace=1;
@@ -843,7 +843,7 @@ int stCorrelationClustering::shouldMerge(int i, int j) {
 	return 0; //not merge
 }
 
-int stCorrelationClustering::cost(int i, int j) {
+int haliteClustering::cost(int i, int j) {
 	
 	int clusterSize=0, cost=0;
 	
@@ -902,7 +902,7 @@ int stCorrelationClustering::cost(int i, int j) {
 	return cost;
 }
 
-int stCorrelationClustering::indCost(double n) {
+int haliteClustering::indCost(double n) {
 	n = ceil(fabs(n*1000000)); //ignores the sign, since + and - cost the same, and 
 	//considers the cost of the smallest integer bigger than n
 	if (n <= 1) {
@@ -911,7 +911,7 @@ int stCorrelationClustering::indCost(double n) {
 	return (int) ceil(log(n)/log((double) 2)); // cost of n, when n > 1
 }
 
-cv::Mat stCorrelationClustering::inputPCA(int i, int j, int *clusterSize) {
+cv::Mat haliteClustering::inputPCA(int i, int j, int *clusterSize) {
 	//prepare the input for PCA
 	double **cluster = new double*[SIZE];
 	

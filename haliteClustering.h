@@ -60,7 +60,7 @@
  */
 /**
 * @file
-* This file defines the class stCorrelationClustering.
+* This file defines the class haliteClustering.
 *
 * @version 1.0
 * @author Robson Leonardo Ferreira Cordeiro (robson@icmc.usp.br)
@@ -71,8 +71,8 @@
 */
 // Copyright (c) 2002-2009 GBDI-ICMC-USP
 
-#ifndef __STCORRELATIONCLUSTERING_H
-#define __STCORRELATIONCLUSTERING_H
+#ifndef __HALITECLUSTERING_H
+#define __HALITECLUSTERING_H
 
 #include <cv.h> //OpenCV
 #include "arboretum/stCountingTree.h"
@@ -90,7 +90,7 @@
 #include <time.h>
 
 //----------------------------------------------------------------------------
-// class stCorrelationClustering
+// class haliteClustering
 //----------------------------------------------------------------------------
 /**
 * This class is used to find clusters in subspaces of the original data space.
@@ -102,7 +102,7 @@
 * @author Caetano Traina Jr (caetano@icmc.usp.br)
 */
 //---------------------------------------------------------------------------
-class stCorrelationClustering {
+class haliteClustering {
 
    public:
 
@@ -118,7 +118,7 @@ class stCorrelationClustering {
 	  * @param hardClustering Choose between hard (1) and soft (0) clustering.
       *
       */
-      stCorrelationClustering (double ** objectsArray, FILE *database,
+      haliteClustering (double ** objectsArray, FILE *database,
 							   int normalizeFactor,
                                int centralConvolutionValue, int neighbourhoodConvolutionValue,
                                double pThreshold, int H, int hardClustering, int initialLevel, DBTYPE dbType, char memory);
@@ -126,7 +126,7 @@ class stCorrelationClustering {
       /**
       * Disposes the allocated memory.
       */
-      ~stCorrelationClustering();
+      ~haliteClustering();
 
       /**
       * Finds clusters in subspaces.
@@ -428,7 +428,7 @@ class stCorrelationClustering {
       */
       void minMax(double **objectsArray, FILE *database, double *min, double *max, char memory);
 
-};//end stCorrelationClustering
+};//end haliteClustering
 //----------------------------------------------------------------------------
 
-#endif //__STCORRELATIONCLUSTERING_H
+#endif //__HALITECLUSTERING_H

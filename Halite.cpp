@@ -60,7 +60,7 @@
  */
 /**
  * @file
- * This file demonstrates the usage of the stCorrelationClustering class.
+ * This file demonstrates the usage of the haliteClustering class.
  *
  * @version 1.0
  * @author Robson Leonardo Ferreira Cordeiro (robson@icmc.usp.br)
@@ -71,18 +71,18 @@
 // Copyright (c) 2002-2009 GBDI-ICMC-USP
 
 //------------------------------------------------------------------------------
-// MrCC
+// Halite
 //------------------------------------------------------------------------------
 
 #include <string.h>
 #include <time.h>
 
 #ifndef __GNUG__
-#include "stCorrelationClustering.h"
+#include "haliteClustering.h"
 #endif //__GNUG__
 
 #ifdef __GNUG__
-#include "stCorrelationClustering.cpp"
+#include "haliteClustering.cpp"
 #endif //__GNUG__
 
 
@@ -123,12 +123,12 @@ int main(int argc, char **argv) {
 	
 	// first validations
 	if (argc != 5) {
-		printf("Usage: MrCC <pThreshold> <H> <hardClustering> <initialLevel>");
+		printf("Usage: Halite <pThreshold> <H> <hardClustering> <initialLevel>");
 		return 1; //error
 	}//end if
 	
 	if (atoi(argv[2]) < 2) {
-		printf("MrCC needs at least two resolution levels (H >= 2) to perform the clustering process.");
+		printf("Halite needs at least two resolution levels (H >= 2) to perform the clustering process.");
 		return 1; //error
 	}//end if
 	
@@ -137,7 +137,7 @@ int main(int argc, char **argv) {
     database=fopen(INPUT, "r");
 	result=fopen(OUTPUT, "w");
 	if (!(database&&result)) {
-		printf("MrCC could not open the database file or create the result file.");
+		printf("Halite could not open the database file or create the result file.");
 		return 1; //error
 	}//end if
 	
@@ -151,8 +151,8 @@ int main(int argc, char **argv) {
 		}//end for
 	}
 
-	// creates an object of the class stCorrelationClustering
-    stCorrelationClustering *sCluster = new stCorrelationClustering(objectsArray, database, NORMALIZE_FACTOR, 
+	// creates an object of the class haliteClustering
+    haliteClustering *sCluster = new haliteClustering(objectsArray, database, NORMALIZE_FACTOR, 
 										   (2*DIM), -1, atof(argv[1]), atoi(argv[2]), atoi(argv[3]), atoi(argv[4]), dbType, memory);		
 	
 	printf("The tree was built.\n");
