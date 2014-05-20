@@ -54,7 +54,7 @@ Then, compile the code using any standard c++ compiler.
 
 running MrCC:
 
-MrCC \alpha H hardClustering initialLevel
+MrCC \alpha H hardClustering initialLevel dim memoryMode
 
 Obs.: - the input/output specs are defined in "arboretum/ioSpecs.h".
       - the default value for \alpha is 1e-10.
@@ -62,6 +62,7 @@ Obs.: - the input/output specs are defined in "arboretum/ioSpecs.h".
       - hardClustering = 1 means that the result will be a dataset partition (one point belongs to at most one cluster).
       - hardClustering = 0 means that the algorithm will do soft-clustering (one point can belong to more than one cluster).
       - the default value for initialLevel is 1.
-      - distinct forms of memory management are possible by tuning the "memory" parameter in the MrCC.cpp file. "memory==0" means that both the dataset and the tree will be put in main memory. "memory==1" means that only the tree will be put in main memory. "memory==2" means that neither the database nor the tree will be put in main memory.
+      - dim specifies the dimension of the input data.  The demo provided has dimension 12 data
+      - distinct forms of memory management are possible by changing the memoryMode parameter. "memory==0" means that both the dataset and the tree will be put in main memory. "memory==1" means that only the tree will be put in main memory. "memory==2" means that neither the database nor the tree will be put in main memory.
 
 Example: make demo (Linux or Mac OS), runExample.bat (Windows).

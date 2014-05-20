@@ -93,9 +93,6 @@
 // global variables
 clock_t startTime;
 DBTYPE dbType = DB_HASH; //DB_HASH or DB_BTREE
-char memory = 2; // 0: unlimited
-                 // 1: limited
-                 // 2: none
 
 /**
  * Initiates the measurement of run time.
@@ -122,8 +119,8 @@ int main(int argc, char **argv) {
 	initClock(); // initiates the meassurement of run time
 	
 	// first validations
-	if (argc != 5) {
-		printf("Usage: Halite <pThreshold> <H> <hardClustering> <initialLevel>\n");
+	if (argc != 7) {
+		printf("Usage: Halite <pThreshold> <H> <hardClustering> <initialLevel> <dim> <memoryMode>\n");
 		return 1; //error
 	}//end if
 	
@@ -132,6 +129,12 @@ int main(int argc, char **argv) {
 		return 1; //error
 	}//end if
 	
+	char memory=atoi(argv[6]);
+	if (memory<0 || memory >2) {
+		printf("Possible memory modes are 0: unlimited, 1: limited 2: none\n");
+		return 1;
+	}//end if
+
 	// opens/creates the used files
 	FILE *database, *result;
     database=fopen(INPUT, "r");
@@ -142,7 +145,7 @@ int main(int argc, char **argv) {
 	}//end if
 	
 	//Default size of the demo
-	int DIM = 12;
+	int DIM = atoi(argv[5]);
 
 	double **objectsArray = 0;
 	if (memory == 0) { //unlimited memory
@@ -156,7 +159,7 @@ int main(int argc, char **argv) {
 
 	// creates an object of the class haliteClustering
     haliteClustering *sCluster = new haliteClustering(objectsArray, database, NORMALIZE_FACTOR, 
-										   (2*DIM), -1, atof(argv[1]), atoi(argv[2]), atoi(argv[3]), atoi(argv[4]), dbType, memory,DIM);		
+										   (2*DIM), -1, atof(argv[1]), atoi(argv[2]), atoi(argv[3]), atoi(argv[4]), dbType, memory, DIM);		
 	
 	printf("The tree was built.\n");
 	printElapsed(); // prints the elapsed time
