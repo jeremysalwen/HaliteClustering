@@ -78,10 +78,11 @@
 
 haliteClustering::haliteClustering (double **objectsArray, FILE *database, int normalizeFactor, int centralConvolutionValue, 
 												  int neighbourhoodConvolutionValue, double pThreshold, int H, int hardClustering, 
-												  int initialLevel, DBTYPE dbType, char memory, int DIM) {
+												  int initialLevel, DBTYPE dbType, char memory, int DIM, int SIZE) {
 
     // stores DIM, H, hardClustering and initialLevel
 this->DIM=DIM;
+this->SIZE=SIZE;
     this->H = H;
 	this->hardClustering = hardClustering;
 	this->initialLevel = initialLevel;

@@ -119,8 +119,8 @@ int main(int argc, char **argv) {
 	initClock(); // initiates the meassurement of run time
 	
 	// first validations
-	if (argc != 7) {
-		printf("Usage: Halite <pThreshold> <H> <hardClustering> <initialLevel> <dim> <memoryMode>\n");
+	if (argc != 8) {
+		printf("Usage: Halite <pThreshold> <H> <hardClustering> <initialLevel> <dim> <numPoints> <memoryMode>\n");
 		return 1; //error
 	}//end if
 	
@@ -129,7 +129,7 @@ int main(int argc, char **argv) {
 		return 1; //error
 	}//end if
 	
-	char memory=atoi(argv[6]);
+	char memory=atoi(argv[7]);
 	if (memory<0 || memory >2) {
 		printf("Possible memory modes are 0: unlimited, 1: limited 2: none\n");
 		return 1;
@@ -144,8 +144,9 @@ int main(int argc, char **argv) {
 		return 1; //error
 	}//end if
 	
-	//Default size of the demo
+	//dimension of the data
 	int DIM = atoi(argv[5]);
+	int SIZE= atoi(argv[6]);
 
 	double **objectsArray = 0;
 	if (memory == 0) { //unlimited memory
@@ -159,7 +160,7 @@ int main(int argc, char **argv) {
 
 	// creates an object of the class haliteClustering
     haliteClustering *sCluster = new haliteClustering(objectsArray, database, NORMALIZE_FACTOR, 
-										   (2*DIM), -1, atof(argv[1]), atoi(argv[2]), atoi(argv[3]), atoi(argv[4]), dbType, memory, DIM);		
+										   (2*DIM), -1, atof(argv[1]), atoi(argv[2]), atoi(argv[3]), atoi(argv[4]), dbType, memory, DIM, SIZE);		
 	
 	printf("The tree was built.\n");
 	printElapsed(); // prints the elapsed time
