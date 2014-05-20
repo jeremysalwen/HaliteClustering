@@ -439,7 +439,7 @@ int haliteClustering::walkThroughConvolution(int level) {
 		searchKey.set_ulen((level+1)*nPos);
 		searchKey.set_flags(DB_DBT_USERMEM);
 		searchData.set_data(cell);
-		searchData.set_ulen(sizeof(stCell));
+		searchData.set_ulen(stCell::sizeOf(DIM));
 		searchData.set_flags(DB_DBT_USERMEM);
 		
 		// Get a cursor

@@ -21,7 +21,7 @@ class stCell {
        		delete[] (char*)this;
     	}
 	static size_t sizeOf(int DIM) {
-		return sizeof(stCell) + DIM - 1;
+		return sizeof(stCell) + (DIM - 1) * sizeof(int);
 	}
 	  void insertPoint() {
 	     sumOfPoints++;		 
