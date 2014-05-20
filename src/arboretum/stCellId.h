@@ -109,12 +109,13 @@ class stCellId {
       */
       int nPos;
 
+
    public:
 
       /**
       * Constructor
       */
-      stCellId(){		 
+      stCellId(int DIM){	 
          nPos = (int) ceil((double)DIM/8);
          index = new unsigned char[nPos];  // one position for each 8 dimensions
          memset(index,0,nPos); // clean the used memory
@@ -133,7 +134,7 @@ class stCellId {
       * @param i Bit position.
 	  * @return the value of the bit in position i.
       */
-      char getBitValue(int i) {		
+      char getBitValue(int i,int DIM) {		
 		int p; // char that stores the bit i
 		i += (nPos*8)-DIM; // i + number of unused bits
 	    for (p=0; i>7; i-=8,p++);	
@@ -145,7 +146,7 @@ class stCellId {
       *
       * @param i Bit position.
       */
-      void invertBit(int i) {	    
+      void invertBit(int i, int DIM) {	    
 		int p; // char that stores the bit i
 		i += (nPos*8)-DIM; // i + number of unused bits
 	    for (p=0; i>7; i-=8,p++);		

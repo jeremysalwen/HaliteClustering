@@ -141,19 +141,22 @@ int main(int argc, char **argv) {
 		return 1; //error
 	}//end if
 	
+	//Default size of the demo
+	int DIM = 12;
+
 	double **objectsArray = 0;
 	if (memory == 0) { //unlimited memory
 		// reads objects from the source database
 		objectsArray = new double*[SIZE];
 		for (int i=0; i<SIZE; i++) {
 			objectsArray[i] = new double[DIM];
-			readPoint(database, objectsArray[i]);
+			readPoint(database, objectsArray[i],DIM);
 		}//end for
 	}
 
 	// creates an object of the class haliteClustering
     haliteClustering *sCluster = new haliteClustering(objectsArray, database, NORMALIZE_FACTOR, 
-										   (2*DIM), -1, atof(argv[1]), atoi(argv[2]), atoi(argv[3]), atoi(argv[4]), dbType, memory);		
+										   (2*DIM), -1, atof(argv[1]), atoi(argv[2]), atoi(argv[3]), atoi(argv[4]), dbType, memory,DIM);		
 	
 	printf("The tree was built.\n");
 	printElapsed(); // prints the elapsed time
@@ -196,7 +199,7 @@ int main(int argc, char **argv) {
 	}
 	if (atoi(argv[3])) { //hard clustering
 		for (int point=0; point < SIZE; point++) {
-			(memory == 0) ? copyPoint(objectsArray[point], onePoint) : readPoint(database, onePoint);
+			(memory == 0) ? copyPoint(objectsArray[point], onePoint, DIM) : readPoint(database, onePoint, DIM);
 			strcpy(line,""); // empty line
 			belongsTo=0;
 			for (betaCluster=0; (!belongsTo) && betaCluster < numBetaClusters; betaCluster++) {
@@ -219,7 +222,7 @@ int main(int argc, char **argv) {
 	} else { //soft clustering
 		int outlier;
 		for (int point=0; point < SIZE; point++) {
-			(memory == 0) ? copyPoint(objectsArray[point], onePoint) : readPoint(database, onePoint);
+			(memory == 0) ? copyPoint(objectsArray[point], onePoint, DIM) : readPoint(database, onePoint, DIM);
 			outlier = 1;
 			for (betaCluster=0; betaCluster < numBetaClusters; betaCluster++) {
 				belongsTo=1;
