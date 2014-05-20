@@ -5,15 +5,19 @@
 * 	Rather than create some interface for containers and iterators, etc, we just have this class
 * which is an iterator through the data points, but also has information about the end of the list and the beginning
 */
+
+#include <fstream>
+#include <sstream>
+
 class PointSource {
 	public:
-		virtual size_t dimension()=0;
-		virtual void restartIteration() =0;
-		virtual bool endOfIteration() = 0;
-		virtual void readPoint(double*) =0;
+		virtual size_t dimension()      = 0;
+		virtual void restartIteration() = 0;
+		virtual bool hasNext()   = 0;
+		virtual void readPoint(double*) = 0;
 };
 
-class ArrayOfPointersPointSource : PointSource {
+class ArrayOfPointersPointSource : public PointSource {
 	public:
 		ArrayOfPointersPointSource(double** array, size_t dim, size_t size) {
 			this->data=array;
@@ -26,8 +30,8 @@ class ArrayOfPointersPointSource : PointSource {
 		void restartIteration() {
 			index=0;
 		}
-		bool endOfIteration() {
-			return index>=size;
+		bool hasNext() {
+			return index<size;
 		}
 		void readPoint(double* point) {
 			double* thePoint=data[index];
@@ -43,46 +47,49 @@ class ArrayOfPointersPointSource : PointSource {
 		size_t size;
 };
 
-class TextFilePointSource : PointSource {
+class TextFilePointSource : public PointSource {
 	public:
-		TextFilePointSource(FILE* file) {
-			this->database=file;
-			char* line=0;
-			size_t n=0;
-   			getline(&line, &n, file);
+		TextFilePointSource(const char* filename):database(filename) {
+			if(!database.is_open()) {
+				throw std::exception();
+			}
+   			std::getline(database,nextline);
 			
+			std::istringstream ss(nextline);
 			dim=0;
-			int errcode;
-			do {
+			while(true) {
 				double tmp;
-				errcode=fscanf(database,"%lf",&tmp);
+				ss >> tmp;
+				if(!ss) break;
 				dim++;
-			} while(errcode!=EOF);
+			}
 
 			dim--; //Last line we do not count because it's the labelling
-			free(line);
 		}
 		size_t dimension()  {
 			return dim;
 		}
 		void restartIteration() {
-			fseek(database,0,SEEK_SET);
+			database.seekg(0,std::ios_base::beg);
+			std::getline(database,nextline);
 		}
-		bool endOfIteration() {
-			int c;
-			c=fgetc(database);
-			ungetc(c,database);
-			return c == EOF;
+		bool hasNext() {
+			return database;
 		}
 		void readPoint(double* point) {
-			int id;
+			std::istringstream ss(nextline);
+
 			for (int j=0; j<dim; j++) {
-				fscanf(database,"%lf",&point[j]);
+				ss >> point[j];
 			}//end for
-			fscanf(database,"%d",&id); // discarts the class id
+			int id;
+			ss>>id;
+
+			std::getline(database,nextline);
 		}
 	private:
-		FILE* database;
+		std::string nextline;
+		std::ifstream database;
 		size_t dim;
 };
 

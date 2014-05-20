@@ -76,20 +76,20 @@
 
 #include "haliteClustering.h"
 
-haliteClustering::haliteClustering (double **objectsArray, FILE *database, int normalizeFactor, int centralConvolutionValue, 
+haliteClustering::haliteClustering (PointSource& data, int normalizeFactor, int centralConvolutionValue, 
 												  int neighbourhoodConvolutionValue, double pThreshold, int H, int hardClustering, 
-												  int initialLevel, DBTYPE dbType, char memory, int DIM, int SIZE) {
+												  int initialLevel, DBTYPE dbType, char memory) {
 
     // stores DIM, H, hardClustering and initialLevel
-this->DIM=DIM;
-this->SIZE=SIZE;
+	
+   this->DIM=data.dimension();
     this->H = H;
 	this->hardClustering = hardClustering;
 	this->initialLevel = initialLevel;
 
     // builds the counting tree and inserts objects on it
     calcTree = new stCountingTree(H, dbType, (memory==2),DIM);
-    fastDistExponent(objectsArray, database, normalizeFactor, memory);
+    fastDistExponent(data, normalizeFactor, memory);
 
     // builds vectors to describe the positions of a cluster center in the data space
     minBetaClusterCenter = new double[DIM];
@@ -657,7 +657,7 @@ int haliteClustering::internalNeighbour(int dimIndex, stCell *cell, stCell **nei
 }//end haliteClustering::internalNeighbour
 
 //---------------------------------------------------------------------------
-void haliteClustering::fastDistExponent(double **objectsArray, FILE *database, int normalizeFactor, char memory) {
+void haliteClustering::fastDistExponent(PointSource& data, int normalizeFactor, char memory) {
 
    double *minD, *maxD, biggest;
    double *onePoint, *resultPoint, *a, *b; // y=Ax+B to normalize each dataset.
@@ -671,7 +671,7 @@ void haliteClustering::fastDistExponent(double **objectsArray, FILE *database, i
    resultPoint = (double *) calloc(DIM,sizeof(double));
 
    // normalizes the data
-   minMax(objectsArray, database, minD, maxD, memory);
+   minMax(data, minD, maxD, memory);
    biggest = 0; // for Normalize==0, 1 or 3
    // normalize=0->Independent, =1->mantain proportion, =2->Clip
    //          =3->Geo Referenced
@@ -708,13 +708,13 @@ void haliteClustering::fastDistExponent(double **objectsArray, FILE *database, i
       calcTree->setNormalizationVectors(a,b); // if there is some normalization
    }//end if
 
+   //We also calculate the number of data points here
+   this->SIZE=0;
    //process each point
-   if (memory != 0) { // limited or none memory
-      fseek(database,0,SEEK_SET); //go to the file begin
-   }
-   for (int i=0; i<SIZE; i++) {
-	 (memory == 0) ? copyPoint(objectsArray[i], onePoint,DIM) : readPoint(database, onePoint, DIM);
+   for (data.restartIteration(); data.hasNext();) {
+    	 data.readPoint(onePoint);
 	 calcTree->insertPoint(onePoint,resultPoint); //add to the grid structure
+	this->SIZE++;
    }//end for
 
    // disposes used memory
@@ -728,7 +728,7 @@ void haliteClustering::fastDistExponent(double **objectsArray, FILE *database, i
 }//end haliteClustering::FastDistExponent
 
 //---------------------------------------------------------------------------
-void haliteClustering::minMax(double **objectsArray, FILE *database, double *min, double *max, char memory) {
+void haliteClustering::minMax(PointSource& data, double *min, double *max, char memory) {
 
   timeNormalization = clock(); //start normalization time
   double *onePoint = new double[DIM];
@@ -737,11 +737,8 @@ void haliteClustering::minMax(double **objectsArray, FILE *database, double *min
     max[j] = -MAXDOUBLE;
   }// end for
   // looking for the minimum and maximum values
-  if (memory != 0) { // limited or none memory
-    fseek(database,0,SEEK_SET); //go to the file begin
-  }
-  for (int i=0; i<SIZE; i++) {
-	(memory == 0) ? copyPoint(objectsArray[i], onePoint,DIM) : readPoint(database, onePoint, DIM);  
+  for (data.restartIteration(); data.hasNext();) {
+    data.readPoint(onePoint); 
     for (int j=0; j<DIM; j++) {
       if (onePoint[j] < min[j]) {
         min[j] = onePoint[j];
@@ -946,7 +943,7 @@ cv::Mat haliteClustering::inputPCA(int i, int j, int *clusterSize) {
 	searchKey.set_ulen((level+1)*nPos);
 	searchKey.set_flags(DB_DBT_USERMEM);
 	searchData.set_data(cell);
-	searchData.set_ulen(sizeof(stCell));
+	searchData.set_ulen(stCell::sizeOf(DIM));
 	searchData.set_flags(DB_DBT_USERMEM);
 	
 	// Get a cursor

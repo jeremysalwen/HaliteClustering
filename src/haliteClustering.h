@@ -76,6 +76,7 @@
 
 #include <cv.h> //OpenCV
 #include "arboretum/stCountingTree.h"
+#include "PointSource.h"
 
 #ifndef __GNUG__
 	#include "Utile.h"	
@@ -109,7 +110,7 @@ class haliteClustering {
       /**
       * Creates the needed structures to find correlation clusters.
       *
-      * @param objectsArray Array with the database objects.
+      * @param PointSource Source of the database objects.
       * @param normalizeFactor Determines how data will be normalized.
       * @param centralConvolutionValue Determines the central weight in the convolution matrix.
       * @param neighbourhoodConvolutionValue Determines the face neighbours weight in the convolution matrix.
@@ -118,10 +119,10 @@ class haliteClustering {
 	  * @param hardClustering Choose between hard (1) and soft (0) clustering.
       *
       */
-      haliteClustering (double ** objectsArray, FILE *database,
+      haliteClustering (PointSource& data,
 							   int normalizeFactor,
                                int centralConvolutionValue, int neighbourhoodConvolutionValue,
-                               double pThreshold, int H, int hardClustering, int initialLevel, DBTYPE dbType, char memory, int DIM, int SIZE);
+                               double pThreshold, int H, int hardClustering, int initialLevel, DBTYPE dbType, char memory);
 
       /**
       * Disposes the allocated memory.
@@ -420,22 +421,22 @@ class haliteClustering {
       * Normalize data points and insert them in the counting tree.
       * Method from the stFractalDimension class (adapted).
       *
-      * @param objectsArray Array with the database objects.
+      * @param PointSource Source of the database objects.
       * @param normalizeFactor Determines how data will be normalized.
       *
       */
-      void fastDistExponent(double **objectsArray, FILE *database, int normalizeFactor, char memory);
+      void fastDistExponent(PointSource& data, int normalizeFactor, char memory);
 
       /**
       * Finds the minimum and maximum data values in each dimension.
       * Method from the stFractalDimension class (adapted).
       *
-      * @param objectsArray Array with the database objects.
+      * @param PointSource Source of the database objects.
       * @param min Vector to receive the minimum data value in each dimension.
       * @param max Vector to receive the maximum data value in each dimension.
       *
       */
-      void minMax(double **objectsArray, FILE *database, double *min, double *max, char memory);
+      void minMax(PointSource& data, double *min, double *max, char memory);
 
 };//end haliteClustering
 //----------------------------------------------------------------------------

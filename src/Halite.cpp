@@ -120,8 +120,8 @@ int main(int argc, char **argv) {
 	initClock(); // initiates the meassurement of run time
 	
 	// first validations
-	if (argc != 8) {
-		printf("Usage: Halite <pThreshold> <H> <hardClustering> <initialLevel> <dim> <numPoints> <memoryMode>\n");
+	if (argc != 6) {
+		printf("Usage: Halite <pThreshold> <H> <hardClustering> <initialLevel> <memoryMode>\n");
 		return 1; //error
 	}//end if
 	
@@ -130,38 +130,44 @@ int main(int argc, char **argv) {
 		return 1; //error
 	}//end if
 	
-	char memory=atoi(argv[7]);
+	char memory=atoi(argv[5]);
 	if (memory<0 || memory >2) {
 		printf("Possible memory modes are 0: unlimited, 1: limited 2: none\n");
 		return 1;
 	}//end if
 
 	// opens/creates the used files
-	FILE *database, *result;
-    database=fopen(INPUT, "r");
+	FILE  *result;
 	result=fopen(OUTPUT, "w");
-	if (!(database&&result)) {
-		printf("Halite could not open the database file or create the result file.\n");
+	if (!result) {
+		printf("Halite could not create the result file.\n");
 		return 1; //error
 	}//end if
-	
-	//dimension of the data
-	int DIM = atoi(argv[5]);
-	int SIZE= atoi(argv[6]);
 
-	double **objectsArray = 0;
+	PointSource*  db;
+	try {
+		db=new TextFilePointSource(INPUT);
+	} catch(std::exception& e) {
+		printf("'Halite could not open database file.\n");
+		return 1;
+	}
+	size_t DIM=db->dimension();
+	PointSource* memdb=NULL;
+	PointSource* datasource=db;
+	std::vector<double*> objectsArray;
 	if (memory == 0) { //unlimited memory
-		// reads objects from the source database
-		objectsArray = new double*[SIZE];
-		for (int i=0; i<SIZE; i++) {
-			objectsArray[i] = new double[DIM];
-			readPoint(database, objectsArray[i],DIM);
+		for(db->restartIteration(); db->hasNext();) {
+			double* tmp = new double[DIM];
+			db->readPoint(tmp);
+			objectsArray.push_back(tmp);
 		}//end for
+		memdb=new ArrayOfPointersPointSource(&objectsArray[0],db->dimension(),objectsArray.size());
+		datasource=memdb;
 	}
 
 	// creates an object of the class haliteClustering
-    haliteClustering *sCluster = new haliteClustering(objectsArray, database, NORMALIZE_FACTOR, 
-										   (2*DIM), -1, atof(argv[1]), atoi(argv[2]), atoi(argv[3]), atoi(argv[4]), dbType, memory, DIM, SIZE);		
+    haliteClustering *sCluster = new haliteClustering(*datasource, NORMALIZE_FACTOR, 
+										   (2*DIM), -1, atof(argv[1]), atoi(argv[2]), atoi(argv[3]), atoi(argv[4]), dbType, memory);		
 	
 	printf("The tree was built.\n");
 	printElapsed(); // prints the elapsed time
@@ -199,12 +205,11 @@ int main(int argc, char **argv) {
 	// labels each point after the clusters found
 	fputs("LABELING\n",result);
 	double *onePoint = new double[DIM];
-	if (memory != 0) { // limited or none memory
-		fseek(database,0,SEEK_SET); //go to the file begin
-	}
+
 	if (atoi(argv[3])) { //hard clustering
-		for (int point=0; point < SIZE; point++) {
-			(memory == 0) ? copyPoint(objectsArray[point], onePoint, DIM) : readPoint(database, onePoint, DIM);
+		int point=0;
+		for (datasource->restartIteration(); datasource->hasNext(); point++) {
+			datasource->readPoint(onePoint);
 			strcpy(line,""); // empty line
 			belongsTo=0;
 			for (betaCluster=0; (!belongsTo) && betaCluster < numBetaClusters; betaCluster++) {
@@ -226,8 +231,9 @@ int main(int argc, char **argv) {
 		}//end for
 	} else { //soft clustering
 		int outlier;
-		for (int point=0; point < SIZE; point++) {
-			(memory == 0) ? copyPoint(objectsArray[point], onePoint, DIM) : readPoint(database, onePoint, DIM);
+		int point=0;
+		for (datasource->restartIteration(); datasource->hasNext(); point++) {
+			datasource->readPoint(onePoint);
 			outlier = 1;
 			for (betaCluster=0; betaCluster < numBetaClusters; betaCluster++) {
 				belongsTo=1;
@@ -251,8 +257,8 @@ int main(int argc, char **argv) {
 		}//end for
 	}
 	fclose(result); // the result file will not be used anymore
-	fclose(database); // the database file will not be used anymore
-	
+	delete db;
+
 	printf("The result file was built.\n");
 	printElapsed(); // prints the elapsed time
 
@@ -260,10 +266,10 @@ int main(int argc, char **argv) {
 	delete [] onePoint;
 	if (memory == 0) { //unlimited memory
 		// disposes objectsArray
-		for (int i=0;i<SIZE;i++) {
+		for (int i=0;i<objectsArray.size();i++) {
 			delete [] objectsArray[i];
-		}//end for
-		delete [] objectsArray;		
+		}//end for	
+		delete memdb;	
 	}
 	delete sCluster;
 	
