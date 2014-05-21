@@ -43,8 +43,12 @@ class stCell {
 	  }
 	  void setId(stCellId *id,int DIM) {
 		 this->stCell::~stCell(); //clean any previous id
-		 this->id = new stCellId(DIM); //create a new id
-	     *(this->id) = *id; //copy content
+		if(id) {
+		    this->id = new stCellId(DIM); //create a new id
+	     	    *(this->id) = *id; //copy content
+		} else {
+			this->id=NULL;
+		}
 	  }
 	  void insertPointPartial(stCellId *sonsCellId,int DIM) {
  	     for (int i=0; i<DIM; i++) {

@@ -186,9 +186,13 @@ public:
 
 		// insert/update the dataset
 		Dbt key(fullId,(level+1)*nPos);
-		Dbt data(cell,stCell::sizeOf(P.size())); //Dynamically finds the size of an stCell with dimension P.size()
+		stCell * tmp=stCell::create(P.size());
+		cell->copy(tmp,P.size());
+		tmp->setId(NULL,P.size());
+		Dbt data(tmp,stCell::sizeOf(P.size())); //Dynamically finds the size of an stCell with dimension P.size()
 		levels[level]->put(NULL, &key, &data, 0);
-		
+
+		tmp->destroy();
 		delete [] fullId;
 	}
 	void findParents(unsigned char *fullId, stCell **parentsVector, int level){
@@ -259,9 +263,13 @@ private:
 			
 			// insert/update the dataset
 			Dbt key(fullId,(level+1)*nPos);
+			stCell * tmp=stCell::create(P.size());
+			cellAndParents[level]->copy(tmp,P.size());
+			tmp->setId(NULL,P.size());
 			Dbt data(cellAndParents[level],stCell::sizeOf(P.size()));
 			levels[level]->put(NULL, &key, &data, 0);
 			
+			tmp->destroy();
 			delete cellId; //cellId will not be used anymore
 		}
 	}      
