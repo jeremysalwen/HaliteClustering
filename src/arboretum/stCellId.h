@@ -177,6 +177,7 @@ class stCellId {
 	  }//end operator ==
 	
 	  void getIndex(unsigned char *index) {
+		printf("%p %p\n",this, index);
 		 memcpy(index, this->index, nPos);
 	  }
 	

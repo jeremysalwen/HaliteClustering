@@ -131,8 +131,8 @@ int main(int argc, char **argv) {
 	}//end if
 	
 	char memory=atoi(argv[5]);
-	if (memory<0 || memory >2) {
-		printf("Possible memory modes are 0: unlimited, 1: limited 2: none\n");
+	if (memory<0 || memory >3) {
+		printf("Possible memory modes are 0: Everything in memory, 1: Only Data in Memory 2: Only Tree in Memory 3: Everything on disk\n");
 		return 1;
 	}//end if
 
@@ -155,7 +155,7 @@ int main(int argc, char **argv) {
 	PointSource* memdb=NULL;
 	PointSource* datasource=db;
 	std::vector<double*> objectsArray;
-	if (memory == 0) { //unlimited memory
+	if (!(memory & 1)) { //unlimited memory
 		for(db->restartIteration(); db->hasNext();) {
 			double* tmp = new double[DIM];
 			const double* t=db->readPoint();
@@ -169,8 +169,7 @@ int main(int argc, char **argv) {
 	}
 
 	// creates an object of the class haliteClustering
-    haliteClustering *sCluster = new haliteClustering(*datasource, NORMALIZE_FACTOR, 
-										   (2*DIM), -1, atof(argv[1]), atoi(argv[2]), atoi(argv[3]), atoi(argv[4]), dbType, memory);		
+    haliteClustering *sCluster = new haliteClustering(*datasource, NORMALIZE_FACTOR, (2*DIM), -1, atof(argv[1]), atoi(argv[2]), atoi(argv[3]), atoi(argv[4]), dbType, (memory & 2));		
 	
 	printf("The tree was built.\n");
 	printElapsed(); // prints the elapsed time
@@ -266,7 +265,7 @@ int main(int argc, char **argv) {
 	printElapsed(); // prints the elapsed time
 
 	// disposes the used structures
-	if (memory == 0) { //unlimited memory
+	if (!(memory & 1)) { //unlimited memory
 		// disposes objectsArray
 		for (int i=0;i<objectsArray.size();i++) {
 			delete [] objectsArray[i];

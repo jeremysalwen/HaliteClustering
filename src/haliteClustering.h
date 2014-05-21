@@ -122,7 +122,7 @@ class haliteClustering {
       haliteClustering (PointSource& data,
 							   int normalizeFactor,
                                int centralConvolutionValue, int neighbourhoodConvolutionValue,
-                               double pThreshold, int H, int hardClustering, int initialLevel, DBTYPE dbType, char memory);
+                               double pThreshold, int H, int hardClustering, int initialLevel, DBTYPE dbType, bool dbDisk);
 
       /**
       * Disposes the allocated memory.
@@ -425,7 +425,7 @@ class haliteClustering {
       * @param normalizeFactor Determines how data will be normalized.
       *
       */
-      void fastDistExponent(PointSource& data, int normalizeFactor, char memory);
+      void fastDistExponent(PointSource& data, int normalizeFactor);
 
       /**
       * Finds the minimum and maximum data values in each dimension.
@@ -436,7 +436,7 @@ class haliteClustering {
       * @param max Vector to receive the maximum data value in each dimension.
       *
       */
-      void minMax(PointSource& data, double *min, double *max, char memory);
+      void minMax(PointSource& data, double *min, double *max);
 
 };//end haliteClustering
 //----------------------------------------------------------------------------

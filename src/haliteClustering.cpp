@@ -78,7 +78,7 @@
 
 haliteClustering::haliteClustering (PointSource& data, int normalizeFactor, int centralConvolutionValue, 
 												  int neighbourhoodConvolutionValue, double pThreshold, int H, int hardClustering, 
-												  int initialLevel, DBTYPE dbType, char memory) {
+												  int initialLevel, DBTYPE dbType, bool dbDisk) {
 
     // stores DIM, H, hardClustering and initialLevel
 	
@@ -88,8 +88,8 @@ haliteClustering::haliteClustering (PointSource& data, int normalizeFactor, int 
 	this->initialLevel = initialLevel;
 
     // builds the counting tree and inserts objects on it
-    calcTree = new stCountingTree(H, dbType, (memory==2),DIM);
-    fastDistExponent(data, normalizeFactor, memory);
+    calcTree = new stCountingTree(H, dbType, dbDisk,DIM);
+    fastDistExponent(data, normalizeFactor);
 
     // builds vectors to describe the positions of a cluster center in the data space
     minBetaClusterCenter = new double[DIM];
@@ -657,7 +657,7 @@ int haliteClustering::internalNeighbour(int dimIndex, stCell *cell, stCell **nei
 }//end haliteClustering::internalNeighbour
 
 //---------------------------------------------------------------------------
-void haliteClustering::fastDistExponent(PointSource& data, int normalizeFactor, char memory) {
+void haliteClustering::fastDistExponent(PointSource& data, int normalizeFactor) {
 
    double *minD, *maxD, biggest;
    double *resultPoint, *a, *b; // y=Ax+B to normalize each dataset.
@@ -670,7 +670,7 @@ void haliteClustering::fastDistExponent(PointSource& data, int normalizeFactor, 
    resultPoint = (double *) calloc(DIM,sizeof(double));
 
    // normalizes the data
-   minMax(data, minD, maxD, memory);
+   minMax(data, minD, maxD);
    biggest = 0; // for Normalize==0, 1 or 3
    // normalize=0->Independent, =1->mantain proportion, =2->Clip
    //          =3->Geo Referenced
@@ -717,16 +717,16 @@ void haliteClustering::fastDistExponent(PointSource& data, int normalizeFactor, 
    }//end for
 
    // disposes used memory
-   delete[] resultPoint;
-   delete[] a;
-   delete[] b;
-   delete[] minD;
-   delete[] maxD;
+   free(resultPoint);
+   free(a);
+   free(b);
+   free(minD);
+   free(maxD);
 
 }//end haliteClustering::FastDistExponent
 
 //---------------------------------------------------------------------------
-void haliteClustering::minMax(PointSource& data, double *min, double *max, char memory) {
+void haliteClustering::minMax(PointSource& data, double *min, double *max) {
 
   timeNormalization = clock(); //start normalization time
   for (int j=0; j<DIM; j++){ // sets the values to the minimum/maximum possible here

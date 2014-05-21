@@ -6,7 +6,7 @@
 
 class stCountingTree {
 public:
-	stCountingTree(int H, DBTYPE dbType, char dbDisk, int DIM): P(DIM) {
+	stCountingTree(int H, DBTYPE dbType, bool dbDisk, int DIM): P(DIM) {
 		//empty tree
 		this->H = H;
 		sumOfPoints = 0;
