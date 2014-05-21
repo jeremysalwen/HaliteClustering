@@ -14,8 +14,34 @@ class PointSource {
 		virtual size_t dimension()      = 0;
 		virtual void restartIteration() = 0;
 		virtual bool hasNext()   = 0;
-		virtual void readPoint(double*) = 0;
+		virtual const double* readPoint() = 0;
 };
+class PackedArrayPointSource : public PointSource {
+	public:
+		PackedArrayPointSource(double* array, size_t dim, size_t size) {
+			this->data=array;
+			this->dim=dim;
+			this->size=size;
+		}
+		size_t dimension()  {
+			return dim;
+		}
+		void restartIteration() {
+			index=0;
+		}
+		bool hasNext() {
+			return index<size;
+		}
+		const double* readPoint() {
+			return &data[index*dim];
+		}
+	private:
+		double* data;
+		size_t index;
+		size_t dim;
+		size_t size;
+};
+
 
 class ArrayOfPointersPointSource : public PointSource {
 	public:
@@ -33,12 +59,8 @@ class ArrayOfPointersPointSource : public PointSource {
 		bool hasNext() {
 			return index<size;
 		}
-		void readPoint(double* point) {
-			double* thePoint=data[index];
-			for(size_t d=0; d<dim; d++) {
-				point[d]=thePoint[d];
-			}
-			index++;
+		const double* readPoint() {
+			return data[index++];
 		}
 	private:
 		double** data;
@@ -65,6 +87,7 @@ class TextFilePointSource : public PointSource {
 			}
 
 			dim--; //Last line we do not count because it's the labelling
+			tmparray.resize(dim);
 		}
 		size_t dimension()  {
 			return dim;
@@ -76,21 +99,23 @@ class TextFilePointSource : public PointSource {
 		bool hasNext() {
 			return database;
 		}
-		void readPoint(double* point) {
+		const double* readPoint() {
 			std::istringstream ss(nextline);
 
 			for (int j=0; j<dim; j++) {
-				ss >> point[j];
+				ss >> tmparray[j];
 			}//end for
 			int id;
 			ss>>id;
 
 			std::getline(database,nextline);
+			return &tmparray[0];
 		}
 	private:
 		std::string nextline;
 		std::ifstream database;
 		size_t dim;
+		std::vector<double> tmparray;
 };
 
 #endif //__POINTSOURCE_H

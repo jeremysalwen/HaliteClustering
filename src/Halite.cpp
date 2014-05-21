@@ -158,7 +158,10 @@ int main(int argc, char **argv) {
 	if (memory == 0) { //unlimited memory
 		for(db->restartIteration(); db->hasNext();) {
 			double* tmp = new double[DIM];
-			db->readPoint(tmp);
+			const double* t=db->readPoint();
+			for(int j=0; j<DIM; j++) {
+				tmp[j]=t[j];
+			}
 			objectsArray.push_back(tmp);
 		}//end for
 		memdb=new ArrayOfPointersPointSource(&objectsArray[0],db->dimension(),objectsArray.size());
@@ -204,12 +207,12 @@ int main(int argc, char **argv) {
 	
 	// labels each point after the clusters found
 	fputs("LABELING\n",result);
-	double *onePoint = new double[DIM];
+	const double *onePoint;
 
 	if (atoi(argv[3])) { //hard clustering
 		int point=0;
 		for (datasource->restartIteration(); datasource->hasNext(); point++) {
-			datasource->readPoint(onePoint);
+			onePoint=datasource->readPoint();
 			strcpy(line,""); // empty line
 			belongsTo=0;
 			for (betaCluster=0; (!belongsTo) && betaCluster < numBetaClusters; betaCluster++) {
@@ -233,7 +236,7 @@ int main(int argc, char **argv) {
 		int outlier;
 		int point=0;
 		for (datasource->restartIteration(); datasource->hasNext(); point++) {
-			datasource->readPoint(onePoint);
+			onePoint=datasource->readPoint();
 			outlier = 1;
 			for (betaCluster=0; betaCluster < numBetaClusters; betaCluster++) {
 				belongsTo=1;
@@ -263,7 +266,6 @@ int main(int argc, char **argv) {
 	printElapsed(); // prints the elapsed time
 
 	// disposes the used structures
-	delete [] onePoint;
 	if (memory == 0) { //unlimited memory
 		// disposes objectsArray
 		for (int i=0;i<objectsArray.size();i++) {

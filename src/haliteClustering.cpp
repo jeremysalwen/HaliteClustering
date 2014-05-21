@@ -660,14 +660,13 @@ int haliteClustering::internalNeighbour(int dimIndex, stCell *cell, stCell **nei
 void haliteClustering::fastDistExponent(PointSource& data, int normalizeFactor, char memory) {
 
    double *minD, *maxD, biggest;
-   double *onePoint, *resultPoint, *a, *b; // y=Ax+B to normalize each dataset.
+   double *resultPoint, *a, *b; // y=Ax+B to normalize each dataset.
    double normalizationFactor = 1.0;
 
    minD = (double *) calloc ((1+DIM),sizeof(double));
    maxD = (double *) calloc ((1+DIM),sizeof(double));
    a = (double *) calloc(DIM,sizeof(double));
    b = (double *) calloc(DIM,sizeof(double));
-   onePoint = (double *) calloc(DIM,sizeof(double));
    resultPoint = (double *) calloc(DIM,sizeof(double));
 
    // normalizes the data
@@ -712,13 +711,12 @@ void haliteClustering::fastDistExponent(PointSource& data, int normalizeFactor, 
    this->SIZE=0;
    //process each point
    for (data.restartIteration(); data.hasNext();) {
-    	 data.readPoint(onePoint);
+    	 const double* onePoint= data.readPoint();
 	 calcTree->insertPoint(onePoint,resultPoint); //add to the grid structure
 	this->SIZE++;
    }//end for
 
    // disposes used memory
-   delete[] onePoint;
    delete[] resultPoint;
    delete[] a;
    delete[] b;
@@ -731,14 +729,13 @@ void haliteClustering::fastDistExponent(PointSource& data, int normalizeFactor, 
 void haliteClustering::minMax(PointSource& data, double *min, double *max, char memory) {
 
   timeNormalization = clock(); //start normalization time
-  double *onePoint = new double[DIM];
   for (int j=0; j<DIM; j++){ // sets the values to the minimum/maximum possible here
     min[j] = MAXDOUBLE;
     max[j] = -MAXDOUBLE;
   }// end for
   // looking for the minimum and maximum values
   for (data.restartIteration(); data.hasNext();) {
-    data.readPoint(onePoint); 
+    const double* onePoint=data.readPoint(); 
     for (int j=0; j<DIM; j++) {
       if (onePoint[j] < min[j]) {
         min[j] = onePoint[j];
@@ -748,7 +745,6 @@ void haliteClustering::minMax(PointSource& data, double *min, double *max, char 
       }//end if
     }//end for
   }//end for
-  delete [] onePoint;
   timeNormalization = (clock()-timeNormalization); //total time spent in the normalization
 
 }//end haliteClustering::MinMax

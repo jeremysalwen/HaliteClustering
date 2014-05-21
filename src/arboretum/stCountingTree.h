@@ -82,7 +82,7 @@ public:
 		delete [] normalizeYInc;
 	}
 	
-	char insertPoint(double *point, double *normPoint) {
+	char insertPoint(const double *point, double *normPoint) {
 		int nPos = (int) ceil((double)P.size()/8);
 		
 		//creates used arrays
