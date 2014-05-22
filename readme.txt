@@ -1,5 +1,11 @@
 Halite - basic information
 
+Halite is an algorithm (and a library) for scalable clustering of high-dimensional data. For more information, see the paper "Halite: Fast and Scalable Multiresolution Local-Correlation Clustering" by Robson L. F. Cordeiro, Agma J. M. Traina, Christos Faloutsos and Caetano Traina Jr.
+
+Included is the C++ API for the algorithm (haliteClustering.cpp), as well as a demo program (Halite.cpp). 
+
+If you want to use the code, the easiest way would just be copying the source files into your project, as it's not set up to build or install a library.
+
 *******************************************************************
 
 input data format:
@@ -48,7 +54,7 @@ First, you must install two third-part software:
    - Oracle Berkeley DB: "http://www.oracle.com/technetwork/database/berkeleydb/overview/index.html"
    - OpenCV: "http://opencv.willowgarage.com/"
 
-Then, compile the code using any standard c++ compiler.
+Then, compile the code using any standard c++ compiler using make.
 
 *******************************************************************
 
@@ -63,6 +69,6 @@ Obs.: - the input/output specs are defined in "arboretum/ioSpecs.h".
       - hardClustering = 0 means that the algorithm will do soft-clustering (one point can belong to more than one cluster).
       - the default value for initialLevel is 1.
       - dim specifies the dimension of the input data.  The demo provided has dimension 12 data
-      - distinct forms of memory management are possible by changing the memoryMode parameter. "memory==0" means that both the dataset and the tree will be put in main memory. "memory==1" means that only the tree will be put in main memory. "memory==2" means that neither the database nor the tree will be put in main memory.
+      - distinct forms of memory management are possible by changing the memoryMode parameter. "memory==0" means that both the dataset and the tree will be put in main memory. "memory==1" means that only the tree will be put in main memory. "memory==2" means that only the dataset will be put in main memory. "memory==3" means that neither the database nor the tree will be put in main memory.
 
 Example: make demo (Linux or Mac OS), runExample.bat (Windows).
