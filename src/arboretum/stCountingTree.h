@@ -51,7 +51,10 @@ public:
 				case 2:
 					cacheSizeG = 1; //1.5GB
 					cacheSizeB = 524288000;
-					break;			
+					break;
+				default: //For cases more than 2, just default to the largest (this code put in by Jeremy)
+					cacheSizeG = 1; //1.5GB 
+					cacheSizeB = 524288000;			
 			}
 			if (levels[i]->set_cachesize(cacheSizeG,cacheSizeB,1)) {
 				std::cout << "Error setting cache size in level " << i << "." << std::endl;
