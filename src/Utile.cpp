@@ -5,6 +5,7 @@
 #include <float.h>
 #include <errno.h>
 #include <assert.h>
+#include <cstring>
 
 /************
 Functions for working with the representation on bits

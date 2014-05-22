@@ -78,13 +78,7 @@
 #include "arboretum/stCountingTree.h"
 #include "PointSource.h"
 
-#ifndef __GNUG__
-	#include "Utile.h"	
-#endif //__GNUG__
-
-#ifdef __GNUG__
-	#include "Utile.cpp"
-#endif //__GNUG__
+#include "Utile.h"
 
 #include <math.h>
 #include <stdio.h>
