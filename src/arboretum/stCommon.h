@@ -73,7 +73,6 @@
 #define __STCOMMON_H
 
 // All compilers
-#include "ioSpecs.h"
 #include <stdlib.h>
 #include <stdio.h>
 

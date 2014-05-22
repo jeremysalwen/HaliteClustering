@@ -87,6 +87,9 @@
 
 #include "PointSource.h"
 
+#define INPUT "databases/12d.dat" //input data path
+#define OUTPUT "results/result12d.dat" //output path
+
 // default values
 #define NORMALIZE_FACTOR 0 // Independent
 
