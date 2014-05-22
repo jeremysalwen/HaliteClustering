@@ -1,5 +1,5 @@
 Halite: src/*.cpp src/*.h src/arboretum/*.h
-	g++ src/Halite.cpp -o Halite -ldb_cxx `pkg-config --cflags --libs opencv`
+	g++ src/Halite.cpp -o Halite -ldb_cxx `pkg-config --cflags --libs opencv` -Wall -Wextra
 
 demo:   Halite
 	./Halite 1e-10 4 1 1 0
