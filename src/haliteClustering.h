@@ -135,6 +135,36 @@ class haliteClustering {
       void findCorrelationClusters();
 
       /**
+      * Finds hard clustering of a point.  Returns 0 for outliers
+      */
+      int assignToClusterHard(const double* point);
+
+      /**
+      * Finds soft clustering of a point.  Writes all the clusters it belongs to to the output iterator.
+      *  note that it will not write anything for outliers.
+      */
+      template<typename Iterator>
+      Iterator assignToClusterSoft(const double* point, Iterator out) {
+	double *normalizeSlope = getCalcTree()->getNormalizeSlope();
+	double *normalizeYInc = getCalcTree()->getNormalizeYInc();
+	for (int betaCluster=0; betaCluster < numBetaClusters; betaCluster++) {
+		bool belongsTo=true;
+		// undoes the normalization and verify if the current point belongs to the current beta-cluster
+		for (int dim=0; belongsTo && dim<DIM; dim++) {				
+			if (! (point[dim] >= ((minBetaClusters[betaCluster][dim]*normalizeSlope[dim])+normalizeYInc[dim]) && 
+				   point[dim] <= ((maxBetaClusters[betaCluster][dim]*normalizeSlope[dim])+normalizeYInc[dim])) ) {
+				belongsTo=false; // this point does not belong to the current beta-cluster
+			}//end if
+		}//end for
+		if(belongsTo) {
+			*out++= correlationClustersBelongings[betaCluster]+1;
+		}	
+	}//end for
+	return out;
+      }
+
+
+      /**
       * Gets the number of beta-clusters found.
       */
       int getNumBetaClusters() {

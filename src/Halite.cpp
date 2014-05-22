@@ -88,7 +88,6 @@
 #include "PointSource.h"
 
 // default values
-#define TAM_LINE 500
 #define NORMALIZE_FACTOR 0 // Independent
 
 // global variables
@@ -186,22 +185,19 @@ int main(int argc, char **argv) {
 	// mounts the result file
 	int numBetaClusters = sCluster->getNumBetaClusters(), numCorrelationClusters = sCluster->getNumCorrelationClusters(), betaCluster,
 	*correlationClustersBelongings = sCluster->getCorrelationClustersBelongings();
-	char **dimCorrelationClusters = sCluster->getDimCorrelationClusters(), line[TAM_LINE], belongsTo, str[20];
+	char **dimCorrelationClusters = sCluster->getDimCorrelationClusters();
 	double **minBetaClusters = sCluster->getMinBetaClusters(), **maxBetaClusters = sCluster->getMaxBetaClusters(),
 	*normalizeSlope = sCluster->getCalcTree()->getNormalizeSlope(),
 	*normalizeYInc = sCluster->getCalcTree()->getNormalizeYInc();
 	
 	// axes relevant to the found clusters
 	for (int i=0; i<numCorrelationClusters; i++) {
-		strcpy(line,""); // empty line
-		strcat(line,"ClusterResult");
-		sprintf(str,"%d",i+1);		
-		strcat(line,str);		
+		fputs("ClusterResult",result);
+		fprintf(result,"%d",i+1);	
 		for (int j=0; j<DIM; j++) {
-			(dimCorrelationClusters[i][j]) ? strcat(line," 1") : strcat(line," 0");
+			(dimCorrelationClusters[i][j]) ? fputs(" 1",result) : fputs(" 0",result);
 		}//end for
-		strcat(line,"\n");
-		fputs(line,result); // writes the relevant axes to the current cluster in the result file
+		fputs("\n",result); // writes the relevant axes to the current cluster in the result file
 	}//end for
 	
 	// labels each point after the clusters found
@@ -212,50 +208,23 @@ int main(int argc, char **argv) {
 		int point=0;
 		for (datasource->restartIteration(); datasource->hasNext(); point++) {
 			onePoint=datasource->readPoint();
-			strcpy(line,""); // empty line
-			belongsTo=0;
-			for (betaCluster=0; (!belongsTo) && betaCluster < numBetaClusters; betaCluster++) {
-				belongsTo=1;
-				// undoes the normalization and verify if the current point belongs to the current beta-cluster
-				for (int dim=0; belongsTo && dim<DIM; dim++) {				
-					if (! (onePoint[dim] >= ((minBetaClusters[betaCluster][dim]*normalizeSlope[dim])+normalizeYInc[dim]) && 
-						   onePoint[dim] <= ((maxBetaClusters[betaCluster][dim]*normalizeSlope[dim])+normalizeYInc[dim])) ) {
-						belongsTo=0; // this point does not belong to the current beta-cluster
-					}//end if
-				}//end for
-			}//end for
-			if (belongsTo) { // this point belongs to one cluster
-				sprintf(line,"%d %d\n",point+1, correlationClustersBelongings[betaCluster-1]+1);			
-			} else {
-				sprintf(line,"%d %d\n",point+1,0);
-			}//end if
-			fputs(line,result);
+			int cluster=sCluster->assignToClusterHard(onePoint);
+			fprintf(result,"%d %d\n",point+1,cluster);
 		}//end for
 	} else { //soft clustering
 		int outlier;
 		int point=0;
 		for (datasource->restartIteration(); datasource->hasNext(); point++) {
 			onePoint=datasource->readPoint();
-			outlier = 1;
-			for (betaCluster=0; betaCluster < numBetaClusters; betaCluster++) {
-				belongsTo=1;
-				// undoes the normalization and verify if the current point belongs to the current beta-cluster
-				for (int dim=0; belongsTo && dim<DIM; dim++) {				
-					if (! (onePoint[dim] >= ((minBetaClusters[betaCluster][dim]*normalizeSlope[dim])+normalizeYInc[dim]) && 
-						   onePoint[dim] <= ((maxBetaClusters[betaCluster][dim]*normalizeSlope[dim])+normalizeYInc[dim])) ) {
-						belongsTo=0; // this point does not belong to the current beta-cluster
-					}//end if
-				} // end for
-				if (belongsTo) {
-					outlier = 0;
-					sprintf(str, "%d %d\n", point+1, correlationClustersBelongings[betaCluster]+1);
-					fputs(str, result);
-				}//end if
-			}//end for
-			if (outlier) {
-				sprintf(str, "%d %d\n", point+1, 0);
-				fputs(str, result);
+			std::vector<int> clusters;
+			sCluster->assignToClusterSoft(onePoint,std::back_inserter(clusters));
+			for(int i=0; i<clusters.size(); i++) {
+				fprintf(result, "%d %d\n", point+1, clusters[i]);
 			}
+			if(clusters.empty()) {
+				fprintf(result, "%d %d\n", point+1, 0);
+			}
+
 		}//end for
 	}
 	fclose(result); // the result file will not be used anymore

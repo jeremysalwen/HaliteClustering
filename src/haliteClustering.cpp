@@ -1024,3 +1024,24 @@ cv::Mat haliteClustering::inputPCA(int i, int j, int *clusterSize) {
 	return clusterMat;
 	
 }
+
+int haliteClustering::assignToClusterHard(const double* point) {
+	double *normalizeSlope = getCalcTree()->getNormalizeSlope();
+	double *normalizeYInc = getCalcTree()->getNormalizeYInc();
+
+	for (int betaCluster=0; betaCluster < numBetaClusters; betaCluster++) {
+		bool belongsTo=true;
+		// undoes the normalization and verify if the current point belongs to the current beta-cluster
+		for (int dim=0; belongsTo && dim<DIM; dim++) {				
+			if (! (point[dim] >= ((minBetaClusters[betaCluster][dim]*normalizeSlope[dim])+normalizeYInc[dim]) && 
+				   point[dim] <= ((maxBetaClusters[betaCluster][dim]*normalizeSlope[dim])+normalizeYInc[dim])) ) {
+				belongsTo=false; // this point does not belong to the current beta-cluster
+			}//end if
+		}//end for
+		if(belongsTo) {
+			return correlationClustersBelongings[betaCluster]+1;
+		}	
+	}//end for
+	
+	return 0;
+}
