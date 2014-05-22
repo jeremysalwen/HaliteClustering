@@ -14,9 +14,9 @@ using namespace std;
 
 #define PI 3.14159
 
-void SetBit(unsigned int *a1, int objectid, int noCells, int noTotalObjects);
-void UnsetBit(unsigned int *a1, int objectid, int noCells, int noTotalObjects);
-int  GetBit(unsigned int *a1, int objectid, int noCells, int noTotalObjects);
+void SetBit(unsigned int *a1, int objectid, int noTotalObjects);
+void UnsetBit(unsigned int *a1, int objectid, int noTotalObjects);
+int  GetBit(unsigned int *a1, int objectid, int noTotalObjects);
 void IntersectionArrayBits(unsigned int *res, unsigned int *a1, unsigned int *a2, int noCells);
 void UnionArrayBits(unsigned int *res, unsigned int *a1, unsigned int *a2, int noCells);
 void NegationArrayBits(unsigned int *res, unsigned int *a1, int noCells);

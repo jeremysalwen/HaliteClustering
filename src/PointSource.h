@@ -15,6 +15,7 @@ class PointSource {
 		virtual void restartIteration() = 0;
 		virtual bool hasNext()   = 0;
 		virtual const double* readPoint() = 0;
+		virtual ~PointSource() {};
 };
 class PackedArrayPointSource : public PointSource {
 	public:
@@ -103,7 +104,7 @@ class TextFilePointSource : public PointSource {
 		const double* readPoint() {
 			std::istringstream ss(nextline);
 
-			for (int j=0; j<dim; j++) {
+			for (size_t j=0; j<dim; j++) {
 				ss >> tmparray[j];
 			}//end for
 			int id;

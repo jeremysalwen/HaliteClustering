@@ -11,7 +11,7 @@ Functions for working with the representation on bits
 *********** */
 
 // Set the bit on position 'objectid' to 1 
-void SetBit(unsigned int *a1, int objectid, int noCells, int noTotalObjects){
+void SetBit(unsigned int *a1, int objectid, int noTotalObjects){
     assert( (objectid >= 0) && (objectid < noTotalObjects) );
 	int cell = objectid / (8*sizeof(unsigned int));
 	int pos_inside_cell = objectid - cell * (8*sizeof(unsigned int));
@@ -21,7 +21,7 @@ void SetBit(unsigned int *a1, int objectid, int noCells, int noTotalObjects){
 }
 
 // Set the bit on position 'objectid' to 0
-void UnsetBit(unsigned int *a1, int objectid, int noCells, int noTotalObjects){
+void UnsetBit(unsigned int *a1, int objectid, int noTotalObjects){
     assert( (objectid >= 0) && (objectid < noTotalObjects) );
 	int cell = objectid / (8*sizeof(unsigned int));
 	int pos_inside_cell = objectid - cell * (8*sizeof(unsigned int));
@@ -31,7 +31,7 @@ void UnsetBit(unsigned int *a1, int objectid, int noCells, int noTotalObjects){
 }
 
 // Returns the bit on position 'objectid' 
-int GetBit(unsigned int *a1, int objectid, int noCells, int noTotalObjects){
+int GetBit(unsigned int *a1, int objectid, int noTotalObjects){
     unsigned int value = 0;
     assert( (objectid >= 0) && (objectid < noTotalObjects) );
 	
@@ -438,13 +438,13 @@ int GetCriticalValueBinomialRight(int n, double p, double dAlpha){
 	//cerr.precision(25);
 	int bSatisfyCondition = 0;
 	double dSum = Binomial2(0,n,p);
-	double dPrevSum = 0;
+	//double dPrevSum = 0;
 	while((!bSatisfyCondition) && (iCriticalValue <= n)){
 		
 		//if ((iCriticalValue == 1500) || (iCriticalValue == 2500) || (iCriticalValue == 3500))
 		//	getchar();
 
-		dPrevSum = dSum;
+		//dPrevSum = dSum;
 		double dBinom = Binomial2(iCriticalValue, n, p);
 		dSum += dBinom;
 		if (bElapsed && bDisplay)

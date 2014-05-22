@@ -97,7 +97,7 @@ public:
 		
 		// normalizes the point
 		char out = 0;
-		for (int i=0; i<P.size(); i++) {
+		for (unsigned int i=0; i<P.size(); i++) {
 		    normPoint[i] = (point[i]-normalizeYInc[i])/normalizeSlope[i];
 		    if (normPoint[i] < 0 || normPoint[i] > 1) {
 				out = 1; // invalid point
@@ -164,7 +164,7 @@ public:
 		return found;
 	}
 	void setNormalizationVectors(double *slope, double *yInc) {
-		for (int i=0; i<P.size(); i++) {
+		for (unsigned int i=0; i<P.size(); i++) {
             normalizeSlope[i] = slope[i];
             normalizeYInc[i] = yInc[i];
 		}
@@ -220,7 +220,7 @@ private:
 		    // and stores in min/max this cell's lower and upper bounds
 		    double middle;
 		    stCellId *cellId = new stCellId(P.size());
-		    for (int i=0; i<P.size(); i++) {
+		    for (unsigned int i=0; i<P.size(); i++) {
 				middle = (max[i]-min[i])/2 + min[i];
 				if (point[i] > middle) { // if point[i] == middle, considers that the point
 					                     // belongs to the cell in the lower half regarding i
@@ -234,7 +234,7 @@ private:
 			
 			// updates the half space counts in level-1
 			if (!level) { // updates in the root (level == 0)
-				for (int i=0; i<P.size(); i++) {
+				for (unsigned int i=0; i<P.size(); i++) {
 					if (!cellId->getBitValue(i,P.size())) {
 						P[i]++; // counts the point, since it is in the root's lower half regarding i
 					}

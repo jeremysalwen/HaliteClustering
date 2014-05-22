@@ -161,7 +161,7 @@ int main(int argc, char **argv) {
 		for(db->restartIteration(); db->hasNext();) {
 			double* tmp = new double[DIM];
 			const double* t=db->readPoint();
-			for(int j=0; j<DIM; j++) {
+			for(unsigned int j=0; j<DIM; j++) {
 				tmp[j]=t[j];
 			}
 			objectsArray.push_back(tmp);
@@ -186,18 +186,16 @@ int main(int argc, char **argv) {
 	printElapsed(); // prints the elapsed time
 	
 	// mounts the result file
-	int numBetaClusters = sCluster->getNumBetaClusters(), numCorrelationClusters = sCluster->getNumCorrelationClusters(), betaCluster,
-	*correlationClustersBelongings = sCluster->getCorrelationClustersBelongings();
+
+	unsigned int numCorrelationClusters=sCluster->getNumCorrelationClusters();
+
 	char **dimCorrelationClusters = sCluster->getDimCorrelationClusters();
-	double **minBetaClusters = sCluster->getMinBetaClusters(), **maxBetaClusters = sCluster->getMaxBetaClusters(),
-	*normalizeSlope = sCluster->getCalcTree()->getNormalizeSlope(),
-	*normalizeYInc = sCluster->getCalcTree()->getNormalizeYInc();
 	
 	// axes relevant to the found clusters
-	for (int i=0; i<numCorrelationClusters; i++) {
+	for (unsigned int i=0; i<numCorrelationClusters; i++) {
 		fputs("ClusterResult",result);
 		fprintf(result,"%d",i+1);	
-		for (int j=0; j<DIM; j++) {
+		for (unsigned int j=0; j<DIM; j++) {
 			(dimCorrelationClusters[i][j]) ? fputs(" 1",result) : fputs(" 0",result);
 		}//end for
 		fputs("\n",result); // writes the relevant axes to the current cluster in the result file
@@ -212,7 +210,7 @@ int main(int argc, char **argv) {
 		onePoint=datasource->readPoint();
 		std::vector<int> clusters;
 		sCluster->assignToClusters(onePoint,std::back_inserter(clusters));
-		for(int i=0; i<clusters.size(); i++) {
+		for(unsigned int i=0; i<clusters.size(); i++) {
 			fprintf(result, "%d %d\n", point+1, clusters[i]);
 		}
 		if(clusters.empty()) {
@@ -229,7 +227,7 @@ int main(int argc, char **argv) {
 	// disposes the used structures
 	if (!(memory & 1)) { //unlimited memory
 		// disposes objectsArray
-		for (int i=0;i<objectsArray.size();i++) {
+		for (unsigned int i=0;i<objectsArray.size();i++) {
 			delete [] objectsArray[i];
 		}//end for	
 		delete memdb;	
