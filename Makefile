@@ -1,4 +1,4 @@
-Halite: src/*.cpp src/*.h
+Halite: src/*.cpp src/*.h src/arboretum/*.h
 	g++ src/Halite.cpp -o Halite -ldb_cxx `pkg-config --cflags --libs opencv`
 
 demo:   Halite
