@@ -135,16 +135,13 @@ class haliteClustering {
       void findCorrelationClusters();
 
       /**
-      * Finds hard clustering of a point.  Returns 0 for outliers
-      */
-      int assignToClusterHard(const double* point);
-
-      /**
-      * Finds soft clustering of a point.  Writes all the clusters it belongs to to the output iterator.
-      *  note that it will not write anything for outliers.
+      * Finds clustering of a point, and writes all clusters to the out iterator
+      * if you are using hard clustering, just pass a pointer to the integer you want it to write to (it will not write anything for outliers)
+      * if you are using soft clustering, pass a std::back_inserter to your favorite container to store the results.
       */
       template<typename Iterator>
-      Iterator assignToClusterSoft(const double* point, Iterator out) {
+      Iterator assignToClusters(const double* point, Iterator out) {
+	
 	double *normalizeSlope = getCalcTree()->getNormalizeSlope();
 	double *normalizeYInc = getCalcTree()->getNormalizeYInc();
 	for (int betaCluster=0; betaCluster < numBetaClusters; betaCluster++) {
@@ -157,7 +154,10 @@ class haliteClustering {
 			}//end if
 		}//end for
 		if(belongsTo) {
-			*out++= correlationClustersBelongings[betaCluster]+1;
+			*out++ = correlationClustersBelongings[betaCluster]+1;
+			if(this->hardClustering) {
+				return out;
+			}
 		}	
 	}//end for
 	return out;

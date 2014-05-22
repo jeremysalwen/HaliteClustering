@@ -204,29 +204,19 @@ int main(int argc, char **argv) {
 	fputs("LABELING\n",result);
 	const double *onePoint;
 
-	if (atoi(argv[3])) { //hard clustering
-		int point=0;
-		for (datasource->restartIteration(); datasource->hasNext(); point++) {
-			onePoint=datasource->readPoint();
-			int cluster=sCluster->assignToClusterHard(onePoint);
-			fprintf(result,"%d %d\n",point+1,cluster);
-		}//end for
-	} else { //soft clustering
-		int outlier;
-		int point=0;
-		for (datasource->restartIteration(); datasource->hasNext(); point++) {
-			onePoint=datasource->readPoint();
-			std::vector<int> clusters;
-			sCluster->assignToClusterSoft(onePoint,std::back_inserter(clusters));
-			for(int i=0; i<clusters.size(); i++) {
-				fprintf(result, "%d %d\n", point+1, clusters[i]);
-			}
-			if(clusters.empty()) {
-				fprintf(result, "%d %d\n", point+1, 0);
-			}
+	int point=0;
+	for (datasource->restartIteration(); datasource->hasNext(); point++) {
+		onePoint=datasource->readPoint();
+		std::vector<int> clusters;
+		sCluster->assignToClusters(onePoint,std::back_inserter(clusters));
+		for(int i=0; i<clusters.size(); i++) {
+			fprintf(result, "%d %d\n", point+1, clusters[i]);
+		}
+		if(clusters.empty()) {
+			fprintf(result, "%d %d\n", point+1, 0);
+		}
+	}//end for
 
-		}//end for
-	}
 	fclose(result); // the result file will not be used anymore
 	delete db;
 
