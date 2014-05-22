@@ -93,6 +93,7 @@ class TextFilePointSource : public PointSource {
 			return dim;
 		}
 		void restartIteration() {
+			database.clear();
 			database.seekg(0,std::ios_base::beg);
 			std::getline(database,nextline);
 		}
