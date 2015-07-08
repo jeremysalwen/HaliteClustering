@@ -11,7 +11,7 @@
 Functions for working with the representation on bits
 *********** */
 
-// Set the bit on position 'objectid' to 1 
+// Set the bit on position 'objectid' to 1
 void SetBit(unsigned int *a1, int objectid, int noTotalObjects){
     assert( (objectid >= 0) && (objectid < noTotalObjects) );
 	int cell = objectid / (8*sizeof(unsigned int));
@@ -31,11 +31,11 @@ void UnsetBit(unsigned int *a1, int objectid, int noTotalObjects){
 	a1[cell] &= mask;
 }
 
-// Returns the bit on position 'objectid' 
+// Returns the bit on position 'objectid'
 int GetBit(unsigned int *a1, int objectid, int noTotalObjects){
     unsigned int value = 0;
     assert( (objectid >= 0) && (objectid < noTotalObjects) );
-	
+
 	int cell = objectid / (8*sizeof(unsigned int));
 	int pos_inside_cell = objectid - cell * (8*sizeof(unsigned int));
 
@@ -112,7 +112,7 @@ int TestEqualityArrayBits(unsigned int *a1, int noCells1, unsigned int *a2, int 
 
 	if (noCells1 != noCells2)
 		return 0;
-	
+
 	int bSame = 1;
 	for(int i = 0; i < noCells1 && bSame; i++){
 		if (a1[i] != a2[i]){
@@ -125,45 +125,45 @@ int TestEqualityArrayBits(unsigned int *a1, int noCells1, unsigned int *a2, int 
 
 ////////////////////////////////   POISSON RELATED FUNCTIONS //////////////////
 
-/************ 
+/************
 Compute Poisson p.d.f.
 ************/
 double Poisson(int x, double m){
-    double res; 
-    
+    double res;
+
     //scalling trick
     //if (x>10000){
     //   x = (int)((double)x/10.0);
     //   m = m/10.0;
     //}
-    
+
     double quantity = -m + (double)x * log(m);
     for(int i=1; i<=x; i++){
         quantity -= log((double)i);
     }
     res = exp(quantity);
-    
-    return res;    
+
+    return res;
 }
 
-/************ 
+/************
 Compute the critical value at right of a Poisson distribution with mean = dMean at significance level dAlpha
 ************/
 int GetCriticalValuePoissonRight(double dMean, double dAlpha){
 
-	
+
 	int iCriticalValue = 1; //always return a critical value of at least 1
 
 	if (dAlpha <= 0){
 		cerr << "Statistical significance level <= 0" << endl;
 		return iCriticalValue;
 	}
-		
+
 
 	int bSatisfyCondition = 0;
 	double dSum = Poisson(0, dMean);
 	while(!bSatisfyCondition){
-	
+
 		dSum += Poisson(iCriticalValue, dMean);
 		if (dSum >= (1 - dAlpha)){
 			bSatisfyCondition = 1;
@@ -177,7 +177,7 @@ int GetCriticalValuePoissonRight(double dMean, double dAlpha){
 
 }
 
-/************ 
+/************
 Compute the critical value at left of a Poisson distribution with mean = dMean at significance level dAlpha
 ************/
 int GetCriticalValuePoissonLeft(double dMean, double dAlpha){
@@ -187,11 +187,11 @@ int GetCriticalValuePoissonLeft(double dMean, double dAlpha){
 		cerr << "Statistical significance level <= 0" << endl;
 		return iCriticalValue;
 	}
-	
+
 	int bSatisfyCondition = 1;
 	double dSum = Poisson(0, dMean);
 	while(bSatisfyCondition){
-		
+
 		dSum += Poisson(iCriticalValue, dMean);
 		if (dSum >= dAlpha){
 			bSatisfyCondition = 0;
@@ -207,7 +207,7 @@ int GetCriticalValuePoissonLeft(double dMean, double dAlpha){
 
 ///////////////////////////////////////////////// BINOMIAL RELATED FUNCTIONS ///////////////////////
 
-/************ 
+/************
 Checks if a value is infinity
 ************/
 bool IsInf(double value){
@@ -215,7 +215,7 @@ bool IsInf(double value){
 	return (value >= DBL_MAX);
 }
 
-/************ 
+/************
 Checks if a value is nan
 ************/
 bool IsNan(double val){
@@ -227,9 +227,9 @@ bool IsNan(double val){
 Computes choose(d,p); combinations of d objects taken as groups of p
 ************/
 double Choose(int d, int p){
-	
+
 	double iResult = 1;
-	
+
 	for(int i = 1; i <= p; i++){
 		iResult *= (double)(d - (i-1)) / (double)i;
 	}
@@ -270,7 +270,7 @@ double Choose2(int n, int k){
 			cerr << "k = " << k << " n = " << n << endl;
 		}
 	}
-	
+
 	dResult = dSum1 - dSum2;
 	dResult = exp(dResult);
 	if (errno == ERANGE){
@@ -285,7 +285,7 @@ double Choose2(int n, int k){
 }
 
 
-/************ 
+/************
 Compute Binomial p.d.f.
 ************/
 bool bElapsed = false;
@@ -319,7 +319,7 @@ double Binomial(int k, int n, double p){
 	return dProb;
 }
 
-/************ 
+/************
 Compute Binomial p.d.f. in a different way
 ************/
 double Binomial2(int k, int n, double p){
@@ -348,10 +348,10 @@ double Binomial2(int k, int n, double p){
 		else
 			return 0;
 	}
-	
+
 	double dProbab = 0;
 	int i = 0;
-	
+
 	errno = 0;
 
 	double dSum1 = 0;
@@ -372,7 +372,7 @@ double Binomial2(int k, int n, double p){
 			cerr << "k = " << k << " n = " << n << " p = " << p << endl;
 		}
 	}
-	
+
 	errno = 0;
 
 	//EDOM = when the argument of log is < 0;
@@ -385,7 +385,7 @@ double Binomial2(int k, int n, double p){
 	}
 
 	errno = 0;
-	
+
 	double dTerm4 = (n-k) * log(1-p);
 	if ((errno == EDOM) || (errno == ERANGE)){
 		cerr << "log(1-p) error message: " << strerror(errno) << endl;
@@ -394,7 +394,7 @@ double Binomial2(int k, int n, double p){
 	}
 
 	errno = 0;
-	
+
 	//cerr.precision(25);
 	dProbab = dSum1 - dSum2 + dTerm3 + dTerm4;
 	//cerr << dSum1 << " - " << dSum2 << " + " << dTerm3 << " + " << dTerm4 << " = " << dProbab << endl;
@@ -411,18 +411,18 @@ double Binomial2(int k, int n, double p){
 		cerr << "k = " << k << " n = " << n << " p = " << p << endl;
 	}
 	assert(dProbab >= 0 && dProbab <= 1);
-	
+
 	return dProbab;
 }
 
 
-/************ 
+/************
 Compute the critical value at right of a Binomial distribution with parameters n and p at significance level dAlpha
 ************/
 int GetCriticalValueBinomialRight(int n, double p, double dAlpha){
 
-	int iCriticalValue = 1; //always return a right critical value of 1 
-	
+	int iCriticalValue = 1; //always return a right critical value of 1
+
 	if (dAlpha <= 0){
 		cerr << "#Statistical significance level <= 0" << endl;
 		return iCriticalValue;
@@ -441,7 +441,7 @@ int GetCriticalValueBinomialRight(int n, double p, double dAlpha){
 	double dSum = Binomial2(0,n,p);
 	//double dPrevSum = 0;
 	while((!bSatisfyCondition) && (iCriticalValue <= n)){
-		
+
 		//if ((iCriticalValue == 1500) || (iCriticalValue == 2500) || (iCriticalValue == 3500))
 		//	getchar();
 
@@ -461,7 +461,7 @@ int GetCriticalValueBinomialRight(int n, double p, double dAlpha){
 		}
 		else{
 			iCriticalValue++;
-		}		
+		}
 	}
 	if (bElapsed && bDisplay)
 		cout << "-----" << endl;
@@ -476,14 +476,14 @@ int GetCriticalValueBinomialRight(int n, double p, double dAlpha){
 	return iCriticalValue;
 }
 
-/************ 
+/************
 Compute the critical value at right of a Binomial distribution with parameters n and p at significance level dAlpha
 Use the normal approximation when possible
 ************/
 int GetCriticalValueBinomialRight2(int n, double p, double dAlpha){
 
 	int iCriticalValue = 1; //always return a critical value of at least 1
-	
+
 	if (dAlpha <= 0){
 		cerr << "Statistical significance level <= 0" << endl;
 		return iCriticalValue;
@@ -495,11 +495,11 @@ int GetCriticalValueBinomialRight2(int n, double p, double dAlpha){
 	}
 
 	if (bNormalApprox == 0){ //cannot use the normal approximation
-		
+
 		int bSatisfyCondition = 0;
 		double dSum = Binomial(0, n, p);
 		while((!bSatisfyCondition) && (iCriticalValue <= n)){
-			
+
 			double dBinom = Binomial(iCriticalValue, n, p);
 			dSum += dBinom;
 			if (dSum >= (1.0 - dAlpha)){
@@ -508,14 +508,14 @@ int GetCriticalValueBinomialRight2(int n, double p, double dAlpha){
 			else{
 				iCriticalValue++;
 			}
-			
+
 		}
 
 		if (iCriticalValue == (n+1)){
 			cerr << "Right critical value: Binomial approx: Critical value reached n" << endl;
 			iCriticalValue = (int)ceil(n * p);
 		}
-		
+
 		return iCriticalValue;
 	}
 	else{
@@ -525,14 +525,14 @@ int GetCriticalValueBinomialRight2(int n, double p, double dAlpha){
 		double sigma = sqrt(n*p*(1-p));
 
 		iCriticalValue = (int)ceil(n * p); // I can start from here, since I am searching for the critical value at right
-		
+
 		int bSatisfyCondition = 0;
 		while((!bSatisfyCondition) && (iCriticalValue <= n)){
-		
+
 			double zscore = (iCriticalValue + 0.5 - mu) / sigma;
-				
+
 			//dCDF = Probab(Z <= zscore), for Z ~ N(0,1)
-			double dCDF = 0; 
+			double dCDF = 0;
 			if (zscore > 0){
 				double x = zscore / sqrt(2.0);
 				dCDF = 0.5 + 0.5 * erf(x);
@@ -555,19 +555,19 @@ int GetCriticalValueBinomialRight2(int n, double p, double dAlpha){
 			cerr << "Right critical value: Normal approx: Critical value reached n" << endl;
 			iCriticalValue = (int)ceil(n * p);
 		}
-		
+
 		return iCriticalValue;
 	}
 }
 
 
-/************ 
+/************
 Compute the critical value at left of a Binomial distribution with parameters n and p at significance level dAlpha
 ************/
 int GetCriticalValueBinomialLeft(int n, double p, double dAlpha){
 
 	int iCriticalValue = 0;
-	
+
 	if (dAlpha <= 0){
 		cerr << "#Statistical significance level <= 0" << endl;
 		iCriticalValue++;
@@ -577,7 +577,7 @@ int GetCriticalValueBinomialLeft(int n, double p, double dAlpha){
 	int bSatisfyCondition = 1;
 	double dSum = 0;
 	while((bSatisfyCondition) && (iCriticalValue <= n)){
-		
+
 		double dBinom = Binomial(iCriticalValue, n, p);
 		dSum += dBinom;
 		if (dSum >= dAlpha){
@@ -592,14 +592,14 @@ int GetCriticalValueBinomialLeft(int n, double p, double dAlpha){
 	return iCriticalValue;
 }
 
-/************ 
+/************
 Compute the critical value at left of a Binomial distribution with parameters n and p at significance level dAlpha
 Use the normal approximation when possible
 ************/
 int GetCriticalValueBinomialLeft2(int n, double p, double dAlpha){
 
 	int iCriticalValue = 1; //always return a critical value of at least 1
-	
+
 	if (dAlpha <= 0){
 		cerr << "Statistical significance level <= 0" << endl;
 		return iCriticalValue;
@@ -611,7 +611,7 @@ int GetCriticalValueBinomialLeft2(int n, double p, double dAlpha){
 	}
 
 	if (bNormalApprox == 0){ //cannot use the normal approximation
-	
+
 		int bSatisfyCondition = 1;
 		double dSum = Binomial(0, n, p);
 		while((bSatisfyCondition) && (iCriticalValue <= n)){
@@ -629,16 +629,16 @@ int GetCriticalValueBinomialLeft2(int n, double p, double dAlpha){
 		return iCriticalValue;
 	}
 	else{
-	
+
 		double mu = n * p;
 		double sigma = sqrt(n*p*(1-p));
 		int bSatisfyCondition = 1;
 		while((bSatisfyCondition) && (iCriticalValue <= n)){
-		
+
 			double zscore = (iCriticalValue + 0.5 - mu) / sigma;
-				
+
 			//dCDF = Probab(Z <= zscore), for Z ~ N(0,1)
-			double dCDF = 0; 
+			double dCDF = 0;
 			if (zscore > 0){
 				double x = zscore / sqrt(2.0);
 				dCDF = 0.5 + 0.5 * erf(x);
@@ -654,7 +654,7 @@ int GetCriticalValueBinomialLeft2(int n, double p, double dAlpha){
 			}
 			else{
 				iCriticalValue++;
-			}	
+			}
 		}
 
 		return iCriticalValue;
@@ -663,30 +663,30 @@ int GetCriticalValueBinomialLeft2(int n, double p, double dAlpha){
 
 
 #ifndef __GNUG__
-	/************ 
+	/************
 	error function
 	************/
 	double erf(double x){
 
 		assert(x >= 0);
-		double dResult = (1 / sqrt(PI)) * gamma(0.5, x*x);	
+		double dResult = (1 / sqrt(PI)) * gamma(0.5, x*x);
 		return dResult;
 	}
 #endif //__GNUG__
 
 
-/************ 
+/************
 lower incomplete gammma function
 ************/
 #define ITMAX 25
 double gamma(double a, double x){
-	
+
 	double dResult = 0;
 	if (x < 0 || a <= 0){
 		cerr << "Invalid arguments in gamma function" << endl;
 		return dResult;
 	}
-	
+
 	double dSum = 1.0 / a;
 	double dTerm = 1.0 / a;
 
@@ -702,7 +702,7 @@ double gamma(double a, double x){
 }
 
 ///////////////////////////////////////////////// Hypergeometric RELATED FUNCTIONS ///////////////////////
-/************ 
+/************
 compute the hyper-geometric distribution
 ************/
 double Hypergeometric(int k, int M, int d){
@@ -711,14 +711,14 @@ double Hypergeometric(int k, int M, int d){
 
 	long int A = (d-1)*(d-2)/2;
 	long int B = d*(d-1)/2;
-	
+
 	if (k > (d-1)){
 		return dProbab;
 	}
 	if ((M-k) > A){
 		return dProbab;
 	}
-	
+
 	int i;
 	long int j;
 
@@ -742,7 +742,7 @@ double Hypergeometric(int k, int M, int d){
 			cerr << "k = " << k << " M = " << M << " d = " << d << endl;
 		}
 	}
-	
+
 	double dSum3 = 0;
 	double dSum4 = 0;
 	for(j = A; j >= A-(M-k-1); j--){
@@ -761,7 +761,7 @@ double Hypergeometric(int k, int M, int d){
 			cerr << "k = " << k << " M = " << M << " d = " << d << endl;
 		}
 	}
-	
+
 	double dSum5 = 0;
 	double dSum6 = 0;
 	for(j = B; j >= B-(M-1); j--){
@@ -780,7 +780,7 @@ double Hypergeometric(int k, int M, int d){
 			cerr << "k = " << k << " M = " << M << " d = " << d << endl;
 		}
 	}
-	
+
 	dProbab = dSum1 - dSum2 + dSum3 - dSum4 - dSum5 + dSum6;
 	errno = 0;
 	dProbab = exp(dProbab);
@@ -797,13 +797,13 @@ double Hypergeometric(int k, int M, int d){
 
 }
 
-/************ 
+/************
 compute the right critical value of the hyper-geometric distribution
 ************/
 int GetCriticalValueHypergeometricRight(int M, int d , double dAlpha){
 
-	int iCriticalValue = 1; //always return a right critical value of 1 
-	
+	int iCriticalValue = 1; //always return a right critical value of 1
+
 	if (dAlpha <= 0){
 		cerr << "#Statistical significance level <= 0" << endl;
 		return iCriticalValue;
@@ -813,18 +813,18 @@ int GetCriticalValueHypergeometricRight(int M, int d , double dAlpha){
 	//double dDenominator = Choose2(d*(d-1)/2, M);
 	double dSum = Hypergeometric(0,M,d);
 	while((!bSatisfyCondition) && (iCriticalValue <= M)){
-		
+
 		double dHyper = Hypergeometric(iCriticalValue,M,d);
 		dSum += dHyper;
-		
+
 		if (dSum >= (1.0 - dAlpha)) {
 			bSatisfyCondition = 1;
 		}
 		else{
 			iCriticalValue++;
-		}		
+		}
 	}
-	
+
 	//dAlpha may be so small that 1 - dAlpha is so close to 1
 	//I may end up with iCriticalValue == M+1
 	if (iCriticalValue == (M+1)){
@@ -845,23 +845,23 @@ t_star is the critical value for alpha = 0.01
 double GetCriticalValueKolmogorov(double t_star, double dAlpha){
 
 	double dCriticalValue = t_star;
-	
+
 	double dConvergence = 1.0E-10;
 	double dStep = 0.001;
 
 	int bSatisfyCondition = 0;
 	while(!bSatisfyCondition){
-		
+
 		double dSum = 0;
 		double dPrevSum = -1;
 		int i = 1;
 		while (fabs(dSum - dPrevSum) > dConvergence){
-		
+
 			dPrevSum = dSum;
 			dSum = dPrevSum + pow(-1, (double)i-1) * exp(-2 * i * i * dCriticalValue * dCriticalValue);
 			i++;
 		}
-			
+
 		double dVal = 1 - 2 * dSum;
 
 		if (dVal >= 1 - dAlpha){
@@ -952,7 +952,7 @@ double GetRightCriticalValueStandardNormal(double dAlpha){
 	double dCurrentVal = dStart;
 	int bSatisfyCondition = 0;
 	while(!bSatisfyCondition){
-		
+
 		dCurrentVal += dStep;
 		double dValToAdd = (1.0 / (sqrt(2*PI))) * exp(- (dCurrentVal * dCurrentVal) / 2.0);
 		dAreaSoFar += dValToAdd;
@@ -961,7 +961,7 @@ double GetRightCriticalValueStandardNormal(double dAlpha){
 			bSatisfyCondition = 1;
 		}
 	}
-	
+
 	return dCriticalValue;
 }
 
@@ -974,7 +974,7 @@ int ExistElem(int elem, vector<int> &v){
 
     int bExist = 0;
 
-	int iLengthVector = (int)v.size(); 
+	int iLengthVector = (int)v.size();
     for(int i = 0;i < iLengthVector && !bExist;i++)
         if (elem == v[i])
             bExist = 1;
@@ -986,7 +986,7 @@ int ExistElem(int elem, vector<int> &v){
 Checks whether "elem" is an element of vector "v"
 ************/
 int ExistElem(int elem, int* v, int no_elem){
-	
+
 	int bExist = 0;
 
 	for(int i = 0;i < no_elem && !bExist;i++)
@@ -996,7 +996,7 @@ int ExistElem(int elem, int* v, int no_elem){
     return bExist;
 }
 
-/************ 
+/************
 Check if vector v1 of length l1 equals vector v2 of length l2
 ************/
 int AreVectorsEqual(int *v1, int l1, int *v2, int l2){
@@ -1009,17 +1009,17 @@ int AreVectorsEqual(int *v1, int l1, int *v2, int l2){
 			if (bExist == 0)
 				return 0;
         }
-    
+
     }
 
     return 1;
 }
 
-/************ 
+/************
 Check if vector v1 equals vector v2
 ************/
 int AreVectorsEqual(vector<int> &v1, vector<int> &v2){
-	
+
 	int l1 = (int)v1.size();
 	int l2 = (int)v2.size();
 
@@ -1031,20 +1031,20 @@ int AreVectorsEqual(vector<int> &v1, vector<int> &v2){
 			if (bExist == 0)
 				return 0;
         }
-    
+
     }
 
     return 1;
 }
 
-/************ 
+/************
 Check if vector v1 is included in vector v2
 ************/
 int CheckInclusionVectors(vector<int> &v1, vector<int> &v2){
 
 	int l1 = (int)v1.size();
 	int l2 = (int)v2.size();
-	
+
 	if (l1 > l2)
 		return 0;
 	else{
@@ -1054,7 +1054,7 @@ int CheckInclusionVectors(vector<int> &v1, vector<int> &v2){
 				return 0;
 		}
 	}
-	
+
 	return 1;
 }
 
