@@ -92,8 +92,8 @@ haliteClustering::haliteClustering (PointSource& data, int normalizeFactor, int 
     fastDistExponent(data, normalizeFactor);
 
     // builds vectors to describe the positions of a cluster center in the data space
-    minBetaClusterCenter = new double[DIM];
-    maxBetaClusterCenter = new double[DIM];
+    minBetaClusterCenter.resize(DIM, 0.0);
+    maxBetaClusterCenter.resize(DIM, 0.0);
 
     // builds vectors to the parents of a cluster center and of a neighbour
     betaClusterCenterParents = new stCell*[H];
@@ -120,17 +120,17 @@ haliteClustering::haliteClustering (PointSource& data, int normalizeFactor, int 
     numBetaClusters=numCorrelationClusters=0;
 
     // defines the maximum number of beta-clusters
-    int maxNumBetaClusters=2000;
+    const size_t maxNumBetaClusters=2000;
 
     // builds pointers to describe the found clusters
-    minBetaClusters = new double*[maxNumBetaClusters];
-    maxBetaClusters = new double*[maxNumBetaClusters];
-    dimBetaClusters = new char*[maxNumBetaClusters];
-    dimCorrelationClusters = new char*[maxNumBetaClusters];
-    correlationClustersBelongings = new int[maxNumBetaClusters];
-    costBetaClusters = new int[maxNumBetaClusters];	
-    levelBetaClusters = new int[maxNumBetaClusters];		
-    for (int i=0; i<maxNumBetaClusters; i++) { // initiation
+    minBetaClusters.resize(maxNumBetaClusters, nullptr);
+    maxBetaClusters.resize(maxNumBetaClusters, nullptr);
+    dimBetaClusters.resize(maxNumBetaClusters, nullptr);
+    dimCorrelationClusters.resize(maxNumBetaClusters, nullptr); 
+    correlationClustersBelongings.resize(maxNumBetaClusters, 0);
+    costBetaClusters.resize(maxNumBetaClusters, 0);
+    levelBetaClusters.resize(maxNumBetaClusters, 0);
+    for (size_t i=0; i<maxNumBetaClusters; i++) { // initiation
         minBetaClusters[i]=maxBetaClusters[i]=0;
         dimBetaClusters[i]=dimCorrelationClusters[i]=0;
         correlationClustersBelongings[i]=costBetaClusters[i]=levelBetaClusters[i]=-1;
@@ -138,7 +138,7 @@ haliteClustering::haliteClustering (PointSource& data, int normalizeFactor, int 
 
     //create memory space for neighbour and betaClusterCenter
     neighbour = stCell::create(DIM);
-    betaClusterCenter = stCell::create(DIM);
+    betaClusterCenter = stCell(DIM);
 
 }//end haliteClustering::haliteClustering
 
@@ -147,12 +147,8 @@ haliteClustering::~haliteClustering() {
 
     // disposes the used structures
     delete neighbour;
-    delete betaClusterCenter;
     delete [] neighbourhood;    
     delete [] attributesRelevance;
-    delete [] minBetaClusterCenter;
-    delete [] maxBetaClusterCenter;
-    delete [] correlationClustersBelongings;
     for (int i=0; i<H; i++) {
         delete betaClusterCenterParents[i];
         delete neighbourParents[i];
@@ -167,12 +163,6 @@ haliteClustering::~haliteClustering() {
     for (int i=0; i<numCorrelationClusters; i++) {
         delete [] dimCorrelationClusters[i];	
     }//end for
-    delete [] dimCorrelationClusters;
-    delete [] minBetaClusters;
-    delete [] maxBetaClusters;
-    delete [] dimBetaClusters;
-    delete [] costBetaClusters;
-    delete [] levelBetaClusters;	
     delete calcTree;
 
 }//end haliteClustering::~haliteClustering
@@ -190,8 +180,8 @@ void haliteClustering::findCorrelationClusters() {
             // apply the convolution matrix to each grid cell in the current level
             // finds the cell with the bigest convolution value		
             if (walkThroughConvolution(level)) {          
-                betaClusterCenter->useCell(); // visited cell
-                calcTree->commitCell(betaClusterCenterParents, betaClusterCenter, level); // commit changes in the tree
+                betaClusterCenter.useCell(); // visited cell
+                calcTree->commitCell(betaClusterCenterParents, &betaClusterCenter, level); // commit changes in the tree
                 if (level) {
                     // pointer to a neighbour of the father
                     stCell *fatherNeighbour = stCell::create(DIM);	
@@ -203,7 +193,7 @@ void haliteClustering::findCorrelationClusters() {
                         // initiates total with the number of points in the father
                         total=betaClusterCenterParents[level-1]->getSumOfPoints();
                         // discovers the number of points in the center
-                        if (betaClusterCenter->getId()->getBitValue(i,DIM)) {
+                        if (betaClusterCenter.getId()->getBitValue(i,DIM)) {
                             center = total - betaClusterCenterParents[level-1]->getP(i);
                         } else {
                             center = betaClusterCenterParents[level-1]->getP(i);
@@ -228,9 +218,13 @@ void haliteClustering::findCorrelationClusters() {
                         attributesRelevance[i] = (100*center)/((double)total/6);				
                         // right critical value for the statistical test
                         int criticalValue = GetCriticalValueBinomialRight2(total, (double)1/6, pThreshold);
+                        std::cout << center << " > " << criticalValue << ": ";
                         if (center > criticalValue) {
+                            std::cout << "yes" << std::endl << std::flush;
                             ok=1; // new cluster found
                         }//end if
+                        else
+                            std::cout << "no" << std::endl << std::flush;
                     }//end for
                     delete fatherNeighbour;
                     for (int j=0;j<level-1;j++) {
@@ -242,7 +236,7 @@ void haliteClustering::findCorrelationClusters() {
                     total=calcTree->getSumOfPoints();			
                     for (int i=0; i<DIM; i++) {			   
                         // discovers the number of points in the center
-                        if (betaClusterCenter->getId()->getBitValue(i,DIM)) {
+                        if (betaClusterCenter.getId()->getBitValue(i,DIM)) {
                             center = total - calcTree->getP()[i];
                         } else {
                             center = calcTree->getP()[i];
@@ -268,11 +262,12 @@ void haliteClustering::findCorrelationClusters() {
         }
 
         // discovers the cThreshold based on the minimum description length method
-        double cThreshold = calcCThreshold(attributesRelevance);
+        const double cThreshold = calcCThreshold(attributesRelevance);
 
         // new cluster found
         numBetaClusters++;
-        printf("a beta-cluster was found at the Counting-tree level %d.\n",level); // prints the level in which a new beta-cluster was found
+        resizeIfNecessary();
+        printf("a beta-cluster was found at the Counting-tree level %d (%zu).\n",level,numBetaClusters); // prints the level in which a new beta-cluster was found
         levelBetaClusters[numBetaClusters-1] = level;
         minBetaClusters[numBetaClusters-1] = new double[DIM];
         maxBetaClusters[numBetaClusters-1] = new double[DIM];
@@ -288,13 +283,13 @@ void haliteClustering::findCorrelationClusters() {
             neighbourhood[i]='N'; // no direct neighbour belongs to the cluster
         }//end for
         // center's position in the data space
-        cellPosition(betaClusterCenter,betaClusterCenterParents,minBetaClusterCenter,maxBetaClusterCenter,level);
+        cellPosition(&betaClusterCenter,betaClusterCenterParents,minBetaClusterCenter,maxBetaClusterCenter,level);
         // for each important dimension, analyzes internal and external neighbours to decide if they also
         // belong to the cluster
         for (int i=0;i<DIM;i++) {
             if (dimBetaClusters[numBetaClusters-1][i]) {
                 // looks for the internal neighbour
-                if (internalNeighbour(i,betaClusterCenter,&neighbour,betaClusterCenterParents,level)) { // internal neighbour in important dimension always belongs to the cluster
+                if (internalNeighbour(i,&betaClusterCenter,&neighbour,betaClusterCenterParents,level)) { // internal neighbour in important dimension always belongs to the cluster
                     // neighbour's position in the data space
                     cellPositionDimensionE_j(neighbour,betaClusterCenterParents,&minNeighbour,&maxNeighbour,level,i);
                     if (maxBetaClusterCenter[i] > maxNeighbour) {
@@ -308,7 +303,7 @@ void haliteClustering::findCorrelationClusters() {
                 for (int j=0;j<level;j++) {
                     betaClusterCenterParents[j]->copy(neighbourParents[j],DIM);	
                 }//end for
-                if (externalNeighbour(i,betaClusterCenter,&neighbour,betaClusterCenterParents,neighbourParents,level)) { // analyzes external neighbour to decide if it belongs to the cluster
+                if (externalNeighbour(i,&betaClusterCenter,&neighbour,betaClusterCenterParents,neighbourParents,level)) { // analyzes external neighbour to decide if it belongs to the cluster
                     if (neighbourhood[i] == 'N') {
                         // neighbour's position in the data space
                         cellPositionDimensionE_j(neighbour,neighbourParents,&minNeighbour,&maxNeighbour,level,i);
@@ -455,8 +450,8 @@ int haliteClustering::walkThroughConvolution(int level) {
     int biggestConvolutionValue = -MAXINT;
     int newConvolutionValue;
     char clusterFoundBefore;
-    double *maxCell = new double[DIM];
-    double *minCell = new double[DIM];
+    std::vector<double> maxCell(DIM, 0.0);
+    std::vector<double> minCell(DIM, 0.0);
 
     // iterate over the database, retrieving each record in turn
     int ret;
@@ -465,49 +460,51 @@ int haliteClustering::walkThroughConvolution(int level) {
         // Does not analyze cells analyzed before and cells that can't be the biggest convolution center.
         // It speeds up the algorithm, specially when neighbourhoodConvolutionValue <= 0
 
-        if ( (!cell.getUsedCell()) && ( (neighbourhoodConvolutionValue > 0) || 
-                    ((cell.getSumOfPoints()*centralConvolutionValue) > biggestConvolutionValue) ||
-                    ( ((cell.getSumOfPoints()*centralConvolutionValue) == biggestConvolutionValue) && 
-                      (memcmp(fullId, ccFullId, (level+1)*nPos) < 0) ) ) ) {
-            //set id for cell
-            id->setIndex(fullId+(level*nPos)); //copy from fullId to id
-            cell.setId(id,DIM); //copy from id to cell->id
-            //finds the parents of cell
-            calcTree->findParents(fullId,parentsVector,level);
-            // discovers the position of cell in the data space
-            cellPosition(&cell,parentsVector,minCell,maxCell,level);
-            // verifies if this cell belongs to a cluster found before
-            clusterFoundBefore=0;
-            for (int i=0;!clusterFoundBefore && i<numBetaClusters;i++) {
-                clusterFoundBefore = 1;
-                for (int j=0; clusterFoundBefore && j<DIM; j++) {
-                    // Does not cut off cells in a level upper than the level where a cluster was found
-                    if (!(maxCell[j] <= maxBetaClusters[i][j] && minCell[j] >= minBetaClusters[i][j])) {
-                        clusterFoundBefore = 0;
-                    }//end if
-                }//end for
+        if (!( (!cell.getUsedCell()) && ( (neighbourhoodConvolutionValue > 0) || 
+                        ((cell.getSumOfPoints()*centralConvolutionValue) > biggestConvolutionValue) ||
+                        ( ((cell.getSumOfPoints()*centralConvolutionValue) == biggestConvolutionValue) && 
+                          (memcmp(fullId, ccFullId, (level+1)*nPos) < 0) ) ) )) {
+            continue;
+        }
+        //set id for cell
+        id->setIndex(fullId+(level*nPos)); //copy from fullId to id
+        cell.setId(id,DIM); //copy from id to cell->id
+        //finds the parents of cell
+        calcTree->findParents(fullId,parentsVector,level);
+        // discovers the position of cell in the data space
+        cellPosition(&cell,parentsVector,minCell,maxCell,level);
+        // verifies if this cell belongs to a cluster found before
+        clusterFoundBefore=0;
+        for (int i=0;!clusterFoundBefore && i<numBetaClusters;i++) {
+            clusterFoundBefore = 1;
+            for (int j=0; clusterFoundBefore && j<DIM; j++) {
+                // Does not cut off cells in a level upper than the level where a cluster was found
+                if (!(maxCell[j] <= maxBetaClusters[i][j] && minCell[j] >= minBetaClusters[i][j])) {
+                    clusterFoundBefore = 0;
+                }//end if
             }//end for
+        }//end for
 
-            if (!clusterFoundBefore) { // the cell doesn't belong to any found cluster
-                // applies the convolution matrix to cell
-                if (neighbourhoodConvolutionValue) {
-                    newConvolutionValue=applyConvolution(&cell,parentsVector,level);
-                } else {
-                    newConvolutionValue=centralConvolutionValue*(cell.getSumOfPoints()); // when the neighbourhood weight is zero
-                }//end if
-                if ( (newConvolutionValue > biggestConvolutionValue) || 
-                        ((newConvolutionValue == biggestConvolutionValue) && (memcmp(fullId, ccFullId, (level+1)*nPos) < 0))) {
-                    // until now, cell is the biggest convolution value, thus, set the new biggest value and copy
-                    // cell and its parents to betaClusterCenter and its parents
-                    biggestConvolutionValue = newConvolutionValue;
-                    memcpy(ccFullId, fullId, (level+1)*nPos);
-                    cell.copy(betaClusterCenter,DIM);
-                    for (int j=0;j<level;j++) {
-                        parentsVector[j]->copy(betaClusterCenterParents[j],DIM);
-                    }//end for
-                }//end if
-            }//end if
-        }//end if        
+        if (clusterFoundBefore) { // the cell doesn't belong to any found cluster
+            // applies the convolution matrix to cell
+            continue;
+        }
+        if (neighbourhoodConvolutionValue) {
+            newConvolutionValue=applyConvolution(&cell,parentsVector,level);
+        } else {
+            newConvolutionValue=centralConvolutionValue*(cell.getSumOfPoints()); // when the neighbourhood weight is zero
+        }//end if
+        if ( (newConvolutionValue > biggestConvolutionValue) || 
+                ((newConvolutionValue == biggestConvolutionValue) && (memcmp(fullId, ccFullId, (level+1)*nPos) < 0))) {
+            // until now, cell is the biggest convolution value, thus, set the new biggest value and copy
+            // cell and its parents to betaClusterCenter and its parents
+            biggestConvolutionValue = newConvolutionValue;
+            memcpy(ccFullId, fullId, (level+1)*nPos);
+            cell.copy(&betaClusterCenter,DIM);
+            for (int j=0;j<level;j++) {
+                parentsVector[j]->copy(betaClusterCenterParents[j],DIM);
+            }//end for
+        }//end if
     }//end while
     if (ret != DB_NOTFOUND) { //it should never enter here
         cout << "Error!" << endl;
@@ -521,8 +518,6 @@ int haliteClustering::walkThroughConvolution(int level) {
 
     // disposes the used memoryA
     delete [] serialized;
-    delete [] minCell;
-    delete [] maxCell;
     delete id;
     delete [] fullId;
     delete [] ccFullId;
@@ -570,7 +565,7 @@ int haliteClustering::applyConvolution(stCell *cell, stCell **cellParents, int l
 
 //---------------------------------------------------------------------------
 void haliteClustering::cellPosition(stCell *cell, stCell **cellParents, 
-        double *min, double *max, int level) {
+        std::vector<double>& min, std::vector<double>& max, int level) {
 
     if (cell) {
         if (level) {
@@ -755,7 +750,7 @@ void haliteClustering::minMax(PointSource& data, double *min, double *max) {
 //---------------------------------------------------------------------------
 void haliteClustering::mergeBetaClusters() {
 
-    int i=0, j, k, aux;
+    size_t i=0, j, k, aux;
     // merges beta-clusters
     while (i<numBetaClusters) {
         j=i+1;		
@@ -913,7 +908,7 @@ cv::Mat haliteClustering::inputPCA(int i, int j, int *clusterSize) {
     //prepare the input for PCA
     double **cluster = new double*[SIZE];
 
-    int level;
+    size_t level;
     if (i==-1 || j==-1) {
         level = (i==-1) ? levelBetaClusters[j] : levelBetaClusters[i];
     } else {
@@ -924,12 +919,12 @@ cv::Mat haliteClustering::inputPCA(int i, int j, int *clusterSize) {
 
     // pointers to the parents of a cell
     stCell **parentsVector = new stCell*[level];
-    for (int k=0;k<level;k++) {
+    for (size_t k=0;k<level;k++) {
         parentsVector[k] = stCell::create(DIM);
     }//end for
 
     //prepare the fullId array
-    int nPos = (int) ceil((double)DIM/8);
+    size_t nPos = (DIM + 7) / 8;
     unsigned char *fullId = new unsigned char[(level+1)*nPos];
     memset(fullId,0,(level+1)*nPos);
 
@@ -952,8 +947,8 @@ cv::Mat haliteClustering::inputPCA(int i, int j, int *clusterSize) {
     //prepare to walk through the level
     int belongsTo;
     double *normalizeSlope = calcTree->getNormalizeSlope(), *normalizeYInc = calcTree->getNormalizeYInc();
-    double *maxCell = new double[DIM];
-    double *minCell = new double[DIM];
+    std::vector<double> maxCell(DIM, 0.0);
+    std::vector<double> minCell(DIM, 0.0);
 
     // iterate over the database, retrieving each record in turn
     int ret;
@@ -968,7 +963,7 @@ cv::Mat haliteClustering::inputPCA(int i, int j, int *clusterSize) {
         cellPosition(&cell,parentsVector,minCell,maxCell,level);
 
         belongsTo=0;
-        for (int betaCluster=0; (!belongsTo) && betaCluster < numBetaClusters; betaCluster++) {
+        for (size_t betaCluster=0; (!belongsTo) && betaCluster < numBetaClusters; betaCluster++) {
             //test if this cluster is part of the PCA input
             if ( (betaCluster == i) || (betaCluster == j) 
                     //|| (i != -1 && correlationClustersBelongings[i] != -1 && correlationClustersBelongings[betaCluster] == correlationClustersBelongings[i]) 
@@ -1016,11 +1011,9 @@ cv::Mat haliteClustering::inputPCA(int i, int j, int *clusterSize) {
     //disposes the used memory
     delete [] serialized;
     delete [] cluster;
-    delete [] minCell;
-    delete [] maxCell;
     delete id;
     delete [] fullId;
-    for (int k=0;k<level;k++) {
+    for (size_t k=0;k<level;k++) {
         delete parentsVector[k];
     }//end for
     delete [] parentsVector;
@@ -1029,3 +1022,12 @@ cv::Mat haliteClustering::inputPCA(int i, int j, int *clusterSize) {
 
 }
 
+void haliteClustering::resizeIfNecessary() {
+    if (numBetaClusters <= levelBetaClusters.size()) {
+        return;
+    }
+    levelBetaClusters.resize(numBetaClusters * 2);
+    minBetaClusters.resize(numBetaClusters * 2);
+    maxBetaClusters.resize(numBetaClusters * 2);
+    dimBetaClusters.resize(numBetaClusters * 2);
+}

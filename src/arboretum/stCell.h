@@ -10,6 +10,9 @@ class stCell {
             return new stCell(DIM);
         }
 
+        stCell() : usedCell(0), sumOfPoints(0), id(stCellId()) {
+        }
+
         stCell(const size_t DIM) :
                 usedCell(0), sumOfPoints(0), id(stCellId(DIM)) {
             P.resize(DIM);
@@ -98,7 +101,6 @@ class stCell {
         }
         void setId(const stCellId *id, const size_t DIM) {
             if(id) {
-                this->id = stCellId(DIM); 
                 this->id = *id;
             } else {
                 this->id.reset();
@@ -122,7 +124,7 @@ class stCell {
             id.reset();
         }
 
-    private:
+    public:
 
 
         char usedCell;     

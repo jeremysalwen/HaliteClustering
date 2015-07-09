@@ -1,8 +1,8 @@
 /**********************************************************************
-* GBDI Arboretum - Copyright (c) 2002-2009 GBDI-ICMC-USP
-*
-*                           Homepage: http://gbdi.icmc.usp.br/arboretum
-**********************************************************************/
+ * GBDI Arboretum - Copyright (c) 2002-2009 GBDI-ICMC-USP
+ *
+ *                           Homepage: http://gbdi.icmc.usp.br/arboretum
+ **********************************************************************/
 /* ====================================================================
  * The GBDI-ICMC-USP Software License Version 1.0
  *
@@ -59,14 +59,14 @@
  *                                            http://gbdi.icmc.usp.br/
  */
 /**
-* @file
-*
-* This file includes all common headers used by this library. It will help the portability
-* of this code.
-*
-* @author Fabio Jun Takada Chino (chino@icmc.usp.br)
-* @author Marcos Rodrigues Vieira (mrvieira@icmc.usp.br)
-*/                                                               
+ * @file
+ *
+ * This file includes all common headers used by this library. It will help the portability
+ * of this code.
+ *
+ * @author Fabio Jun Takada Chino (chino@icmc.usp.br)
+ * @author Marcos Rodrigues Vieira (mrvieira@icmc.usp.br)
+ */                                                               
 // Copyright (c) 2002-2009 GBDI-ICMC-USP
 
 #ifndef __STCOMMON_H
@@ -78,58 +78,58 @@
 
 // GNU GCC
 #ifdef __GNUG__
-   #include <string.h> // malloc & cia
-   
-   // This is an useful function extracted from Windows C Runtime library.
-   #define random(x) ((int)((((double)rand()) / ((double)RAND_MAX)) * (x)))
-   
-	// Mingw does not provide these values so, here they are.
-	#ifdef __MINGW32_VERSION
-	   #define MAXSHORT    0x7fff
-	   #define MAXINT      0x7fffffff
-	   #define MAXLONG     0x7fffffff
-	   #define MAXDOUBLE   1.7976931348623158E+308
-	   #define MAXFLOAT    3.40282347E+38F
-	   #define MINDOUBLE   2.2250738585072014E-308
-	   #define MINFLOAT    1.17549435E-38F
-	   #define MAXLDOUBLE  1.1897314953572317649E+4932L
-	   #define MINLDOUBLE  3.362103143112094E-4917L
-	#else	
-		#ifdef __CYGWIN__
-	   	#define MAXSHORT    0x7fff
-	   	#define MAXINT      0x7fffffff
-	   	#define MAXLONG     0x7fffffff
-	   	#define MAXDOUBLE   1.7976931348623158E+308
-	   	#ifndef MAXFLOAT
-	   		#define MAXFLOAT    3.40282347E+38F
-	   	#endif
-	   	#define MINDOUBLE   2.2250738585072014E-308
-	   	#define MINFLOAT    1.17549435E-38F
-		   #define MAXLDOUBLE  1.1897314953572317649E+4932L
-		   #define MINLDOUBLE  3.362103143112094E-4917L
-		#else
-		   // Other gccs
-           #define MAXINT      0x7fffffff
-           #define MAXDOUBLE   1.7976931348623158E+308
-		   //#include <values.h>
-		#endif
-	#endif //__MINGW32_VERSION
+#include <string.h> // malloc & cia
+
+// This is an useful function extracted from Windows C Runtime library.
+#define random(x) ((int)((((double)rand()) / ((double)RAND_MAX)) * (x)))
+
+// Mingw does not provide these values so, here they are.
+#ifdef __MINGW32_VERSION
+#define MAXSHORT    0x7fff
+#define MAXINT      0x7fffffff
+#define MAXLONG     0x7fffffff
+#define MAXDOUBLE   1.7976931348623158E+308
+#define MAXFLOAT    3.40282347E+38F
+#define MINDOUBLE   2.2250738585072014E-308
+#define MINFLOAT    1.17549435E-38F
+#define MAXLDOUBLE  1.1897314953572317649E+4932L
+#define MINLDOUBLE  3.362103143112094E-4917L
+#else	
+#ifdef __CYGWIN__
+#define MAXSHORT    0x7fff
+#define MAXINT      0x7fffffff
+#define MAXLONG     0x7fffffff
+#define MAXDOUBLE   1.7976931348623158E+308
+#ifndef MAXFLOAT
+#define MAXFLOAT    3.40282347E+38F
+#endif
+#define MINDOUBLE   2.2250738585072014E-308
+#define MINFLOAT    1.17549435E-38F
+#define MAXLDOUBLE  1.1897314953572317649E+4932L
+#define MINLDOUBLE  3.362103143112094E-4917L
+#else
+// Other gccs
+#define MAXINT      0x7fffffff
+#define MAXDOUBLE   1.7976931348623158E+308
+//#include <values.h>
+#endif
+#endif //__MINGW32_VERSION
 #endif //__GNUG__
 
 // Microsoft Visual C++
 #ifdef _MSC_VER
-   #include <float.h>	      
-   #include <limits.h>
-   #define MAXLONG LONG_MAX
-   #define MAXINT INT_MAX   
-   #define MAXDOUBLE DBL_MAX
+#include <float.h>	      
+#include <limits.h>
+#define MAXLONG LONG_MAX
+#define MAXINT INT_MAX   
+#define MAXDOUBLE DBL_MAX
 #endif //_MSC_VER
 
 // Borland C++
 #ifdef __BORLANDC__
-   #include <mem.h> // malloc & cia
-   #include <values.h>
-   using namespace std; // standard c++ lib classes
+#include <mem.h> // malloc & cia
+#include <values.h>
+using namespace std; // standard c++ lib classes
 #endif //__BORLANDC__
 
 #endif //__STCOMMON_H

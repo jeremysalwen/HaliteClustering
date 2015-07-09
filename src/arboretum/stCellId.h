@@ -97,7 +97,7 @@
  */
 class stCellId {   
 
-    private:
+    public:
 
         /**
          * Vector that is going to be the index in which each bit refers to a dimension.
@@ -115,7 +115,7 @@ class stCellId {
          * Constructor
          */
         stCellId(const size_t DIM){         
-            const size_t size = DIM ? (DIM - 1) / 8 + 1 : 1;
+            const size_t size = (DIM + 7) / 8;
             index = std::unique_ptr<std::vector<unsigned char>>(new std::vector<unsigned char>());
             index->resize(size, 0);
         }//end stCellId

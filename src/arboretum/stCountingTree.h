@@ -66,16 +66,16 @@ class stCountingTree {
         ~stCountingTree() {
             //close and remove one dataset per tree level
             char rm_cmd[100];
-            for (int i=0; i<H-1; i++) {
+            for (size_t i=0; i<H-1; i++) {
                 //close and delete the dataset
                 //levels[i]->close(0);
                 //delete levels[i];
 
                 //delete the file
 #ifdef __GNUG__ //Linux/Mac
-                sprintf(rm_cmd,"rm -f level_%d.db", i);
+                sprintf(rm_cmd,"rm -f level_%zu.db", i);
 #else //Windows
-                sprintf(rm_cmd,"del level_%d.db /f", i);
+                sprintf(rm_cmd,"del level_%u.db /f", i);
 #endif //__GNUG__
                 system(rm_cmd);
             }
@@ -87,7 +87,7 @@ class stCountingTree {
         }
 
         char insertPoint(const double *point, double *normPoint) {
-            int nPos = P.size() ? (P.size() - 1) / 8 + 1 : 1;
+            const size_t nPos = (P.size() + 7) / 8;
 
             //creates used arrays
             double *min = new double[P.size()];
@@ -123,7 +123,7 @@ class stCountingTree {
             return !out;
         }
 
-        Db *getDb(int level) {
+        Db *getDb(size_t level) {
             return (level<H-1)?levels[level]:0;
         }
         double *getNormalizeYInc(){
@@ -139,7 +139,7 @@ class stCountingTree {
             return &P[0];
         }
         int findInNode(stCell **parents, stCell **cell, stCellId *id, int level) {
-            int nPos = (P.size() - 1) / 8 + 1;
+            const size_t nPos = (P.size() + 7) / 8;
             unsigned char *fullId = new unsigned char[(level+1)*nPos];
             memset(fullId, 0, (level+1)*nPos);
 
@@ -172,17 +172,17 @@ class stCountingTree {
             }
         }
         void dbSync() {
-            for (int i=0; i<H-1; i++) {
+            for (size_t i=0; i<H-1; i++) {
                 levels[i]->sync(0); //flushes any cached information to disk
             }
         }
-        void commitCell(stCell **parents, stCell *cell, int level) {
-            int nPos = (P.size() - 1) / 8 + 1;
+        void commitCell(stCell **parents, stCell *cell, size_t level) {
+            const size_t nPos = (P.size() + 7) / 8;
             unsigned char *fullId = new unsigned char[(level+1)*nPos];
             memset(fullId, 0, (level+1)*nPos);
 
             //use cell and parents to define fullId
-            for (int l=0; l<=level; l++) {
+            for (size_t l=0; l<=level; l++) {
                 (l==level) ? cell->getId()->getIndex(fullId+(l*nPos)) : (parents[l]->getId())->getIndex(fullId+(l*nPos));
             }
 
@@ -196,7 +196,7 @@ class stCountingTree {
             delete [] fullId;
         }
         void findParents(unsigned char *fullId, stCell **parentsVector, int level){
-            int nPos = (P.size() - 1) / 8 + 1;
+            const size_t nPos = (P.size() + 7) / 8;
             Dbt searchKey, searchData;
             searchKey.set_data(fullId);
             searchData.set_ulen(stCell::size(P.size())); //Dynamically finds the size of an stCell with dimension P.size()
@@ -219,7 +219,7 @@ class stCountingTree {
         }
 
     private:
-        void deepInsert(int level, double *min, double *max, double *point, unsigned char *fullId, std::vector<stCell>& cellAndParents) {
+        void deepInsert(size_t level, double *min, double *max, double *point, unsigned char *fullId, std::vector<stCell>& cellAndParents) {
             if (level < H-1) {
                 // mounts the id of the cell that covers point in the current level
                 // and stores in min/max this cell's lower and upper bounds
@@ -282,8 +282,8 @@ class stCountingTree {
         }
 
         std::vector<int> P;
-        int sumOfPoints;
-        int H;
+        size_t sumOfPoints;
+        size_t H;
         Db **levels;
         double * normalizeSlope;
         double * normalizeYInc;
