@@ -175,7 +175,8 @@ haliteClustering::~haliteClustering() {
 
 //---------------------------------------------------------------------------
 void haliteClustering::findCorrelationClusters() {
-
+    std::vector<size_t> old_center(DIM, 0);
+    std::vector<size_t> old_critical(DIM, 0);
     // defines when a new cluster is found
     int ok, center, total;
     do { // looks for a cluster in each loop
@@ -201,7 +202,7 @@ void haliteClustering::findCorrelationClusters() {
                         // discovers the number of points in the center
                         if (betaClusterCenter.getId()->getBitValue(i,DIM)) {
                             center = total - betaClusterCenterParents[level-1]->getP(i);
-                        } else {
+                    } else {
                             center = betaClusterCenterParents[level-1]->getP(i);
                         }//end if
 
@@ -224,13 +225,14 @@ void haliteClustering::findCorrelationClusters() {
                         attributesRelevance[i] = (100*center)/((double)total/6);
                         // right critical value for the statistical test
                         int criticalValue = GetCriticalValueBinomialRight2(total, (double)1/6, pThreshold);
-                        std::cout << center << " > " << criticalValue << ": ";
-                        if (center > criticalValue) {
-                            std::cout << "yes" << std::endl << std::flush;
+                        if (center > criticalValue && old_center[i] != center && old_critical[i] != criticalValue) {
                             ok=1; // new cluster found
                         }//end if
-                        else
-                            std::cout << "no" << std::endl << std::flush;
+
+                        old_center[i] = center;
+                        old_critical[i] = criticalValue;
+
+                        std::cout << old_center[i] << std::endl;
                     }//end for
                     delete fatherNeighbour;
                     for (int j = 0;j<level-1;j++) {
@@ -469,7 +471,7 @@ int haliteClustering::walkThroughConvolution(int level) {
         if (!( (!cell.getUsedCell()) && ( (neighbourhoodConvolutionValue > 0) ||
                         ((cell.getSumOfPoints()*centralConvolutionValue) > biggestConvolutionValue) ||
                         ( ((cell.getSumOfPoints()*centralConvolutionValue) == biggestConvolutionValue) &&
-                          (memcmp(fullId, ccFullId, (level+1)*nPos) < 0) ) ) )) {
+                          (memcmp(fullId, ccFullId, (level+1)*nPos) != 0) ) ) )) {
             continue;
         }
         //set id for cell

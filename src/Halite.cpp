@@ -87,7 +87,7 @@
 
 #include "PointSource.h"
 
-#define INPUT "databases/ds1.csv" //input data path
+#define INPUT "databases/ds2.csv" //input data path
 #define OUTPUT "results/resultds12.dat" //output path
 
 // default values
