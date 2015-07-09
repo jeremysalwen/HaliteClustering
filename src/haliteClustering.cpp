@@ -231,8 +231,6 @@ void haliteClustering::findCorrelationClusters() {
 
                         old_center[i] = center;
                         old_critical[i] = criticalValue;
-
-                        std::cout << old_center[i] << std::endl;
                     }//end for
                     delete fatherNeighbour;
                     for (int j = 0;j<level-1;j++) {
@@ -471,7 +469,7 @@ int haliteClustering::walkThroughConvolution(int level) {
         if (!( (!cell.getUsedCell()) && ( (neighbourhoodConvolutionValue > 0) ||
                         ((cell.getSumOfPoints()*centralConvolutionValue) > biggestConvolutionValue) ||
                         ( ((cell.getSumOfPoints()*centralConvolutionValue) == biggestConvolutionValue) &&
-                          (memcmp(fullId, ccFullId, (level+1)*nPos) != 0) ) ) )) {
+                          (memcmp(fullId, ccFullId, (level+1)*nPos) < 0) ) ) )) {
             continue;
         }
         //set id for cell
@@ -503,7 +501,7 @@ int haliteClustering::walkThroughConvolution(int level) {
             newConvolutionValue=centralConvolutionValue*(cell.getSumOfPoints()); // when the neighbourhood weight is zero
         }//end if
         if ( (newConvolutionValue > biggestConvolutionValue) ||
-                ((newConvolutionValue == biggestConvolutionValue) && (memcmp(fullId, ccFullId, (level+1)*nPos) != 0))) {
+                ((newConvolutionValue == biggestConvolutionValue) && (memcmp(fullId, ccFullId, (level+1)*nPos) < 0))) {
             // until now, cell is the biggest convolution value, thus, set the new biggest value and copy
             // cell and its parents to betaClusterCenter and its parents
             biggestConvolutionValue = newConvolutionValue;
