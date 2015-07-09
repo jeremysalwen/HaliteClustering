@@ -135,8 +135,9 @@ class stCellId {
          * @return the value of the bit in position i.
          */
         char getBitValue(const size_t i, const size_t DIM) { 
-            const size_t p = i / 8;
-            const size_t k = i % 8;
+            const size_t j = i + (8 * index->size()) - DIM;
+            const size_t p = j / 8;
+            const size_t k = 7 - j % 8;
             return ((*index)[p] & (1 << k)) > 0;     
         }//end getBitValue
 
@@ -146,8 +147,9 @@ class stCellId {
          * @param i Bit position.
          */
         void invertBit(const size_t i, const size_t DIM) {  
-            const size_t p = i / 8;
-            const size_t k = i % 8;
+            const size_t j = i + (8 * index->size()) - DIM;
+            const size_t p = j / 8;
+            const size_t k = 7 - j % 8;
             (*index)[p] ^= (1 << k);      
         }//end invertBit
 

@@ -463,6 +463,7 @@ class haliteClustering {
         void minMax(PointSource& data, double *min, double *max);
 
         void resizeIfNecessary();
+        size_t getCenter(size_t level);
 
 };//end haliteClustering
 //----------------------------------------------------------------------------

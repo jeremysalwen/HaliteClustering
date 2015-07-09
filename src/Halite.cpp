@@ -88,7 +88,7 @@
 #include "PointSource.h"
 
 #define INPUT "databases/ds1.csv" //input data path
-#define OUTPUT "results/resultds1.dat" //output path
+#define OUTPUT "results/resultds12.dat" //output path
 
 // default values
 #define NORMALIZE_FACTOR 0 // Independent

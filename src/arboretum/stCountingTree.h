@@ -178,7 +178,7 @@ class stCountingTree {
         }
         void commitCell(stCell **parents, stCell *cell, size_t level) {
             const size_t nPos = (P.size() + 7) / 8;
-            unsigned char *fullId = new unsigned char[(level+1)*nPos];
+            unsigned char* const fullId = new unsigned char[(level+1)*nPos];
             memset(fullId, 0, (level+1)*nPos);
 
             //use cell and parents to define fullId
@@ -188,7 +188,7 @@ class stCountingTree {
 
             // insert/update the dataset
             Dbt key(fullId,(level+1)*nPos);
-            unsigned char* serialized = cell->serialize();
+            unsigned char* const serialized = cell->serialize();
             Dbt data(serialized,stCell::size(P.size())); //Dynamically finds the size of an stCell with dimension P.size()
             levels[level]->put(NULL, &key, &data, 0);
 
