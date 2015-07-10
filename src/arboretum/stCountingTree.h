@@ -201,7 +201,7 @@ class stCountingTree {
             searchKey.set_data(fullId);
             searchData.set_ulen(stCell::size(P.size())); //Dynamically finds the size of an stCell with dimension P.size()
             searchData.set_flags(DB_DBT_USERMEM);
-            stCellId *id = new stCellId(P.size());
+            stCellId id(P.size());
             for (int l=0; l<level; l++) {
                 //search the parent in level l
                 unsigned char* serialized = new unsigned char[stCell::size(P.size())];
@@ -212,10 +212,9 @@ class stCountingTree {
                 parentsVector[l] = new stCell(tmp);
                 delete[] serialized;
 
-                id->setIndex(fullId+(l*nPos));
-                parentsVector[l]->setId(id,P.size()); //copy the id
+                id.setIndex(fullId+(l*nPos));
+                parentsVector[l]->setId(&id,P.size()); //copy the id
             }
-            delete id;
         }
 
     private:
