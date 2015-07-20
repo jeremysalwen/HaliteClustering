@@ -99,7 +99,7 @@ class TextFilePointSource : public PointSource {
 			std::getline(database,nextline);
 		}
 		bool hasNext() {
-			return database;
+			return !database.eof();
 		}
 		const double* readPoint() {
 			std::istringstream ss(nextline);

@@ -1,13 +1,13 @@
 /**********************************************************************
-* GBDI Arboretum - Copyright (c) 2002-2009 GBDI-ICMC-USP
-*
-*                           Homepage: http://gbdi.icmc.usp.br/arboretum
-**********************************************************************/
+ * GBDI Arboretum - Copyright (c) 2002-2009 GBDI-ICMC-USP
+ *
+ *                           Homepage: http://gbdi.icmc.usp.br/arboretum
+ **********************************************************************/
 /* ====================================================================
  * The GBDI-ICMC-USP Software License Version 1.0
  *
  * Copyright (c) 2009 Grupo de Bases de Dados e Imagens, Instituto de
- * Ciências Matemáticas e de Computação, University of São Paulo -
+ * Ciï¿½ncias Matemï¿½ticas e de Computaï¿½ï¿½ï¿½o, University of Sï¿½o Paulo -
  * Brazil (the Databases and Image Group - Intitute of Matematical and
  * Computer Sciences).  All rights reserved.
  *
@@ -26,8 +26,8 @@
  * 3. The end-user documentation included with the redistribution,
  *    if any, must include the following acknowledgment:
  *       "This product includes software developed by Grupo de Bases
- *        de Dados e Imagens, Instituto de Ciências Matemáticas e de
- *        Computação, University of São Paulo - Brazil (the Databases 
+ *        de Dados e Imagens, Instituto de Ciï¿½ncias Matemï¿½ticas e de
+ *        Computaï¿½ï¿½o, University of Sï¿½o Paulo - Brazil (the Databases 
  *        and Image Group - Intitute of Matematical and Computer
  *        Sciences)"
  *
@@ -58,7 +58,7 @@
  * ====================================================================
  *                                            http://gbdi.icmc.usp.br/
  */
- /**
+/**
  * @file
  * This file defines the class stCellId.
  *
@@ -71,119 +71,125 @@
  * @author Robson Leonardo Ferreira Cordeiro (robson@icmc.usp.br)
  * 
  */
- // Copyright (c) 2002-2009 GBDI-ICMC-USP
+// Copyright (c) 2002-2009 GBDI-ICMC-USP
 
 #ifndef __STCELLID_H
 #define __STCELLID_H
 
 #include "stCommon.h"
-#include <memory.h>
-#include <math.h>
+#include <vector>
+#include <memory>
+#include <algorithm>
 
 //----------------------------------------------------------------------------
 // class stCellId
 //----------------------------------------------------------------------------
 /**
-* To identify cells in datasets.
-*
-* @version 3.0
-* @author Caetano Traina Jr (caetano@icmc.usp.br)
-* @author Agma Juci Machado Traina (agma@icmc.usp.br)
-* @author Christos Faloutsos (christos@cs.cmu.edu)
-* @author Elaine Parros Machado de Sousa (parros@icmc.usp.br)
-* @author Ana Carolina Riekstin (anacarol@grad.icmc.usp.br)
-* @author Robson Leonardo Ferreira Cordeiro (robson@icmc.usp.br)
-*/
+ * To identify cells in datasets.
+ *
+ * @version 3.0
+ * @author Caetano Traina Jr (caetano@icmc.usp.br)
+ * @author Agma Juci Machado Traina (agma@icmc.usp.br)
+ * @author Christos Faloutsos (christos@cs.cmu.edu)
+ * @author Elaine Parros Machado de Sousa (parros@icmc.usp.br)
+ * @author Ana Carolina Riekstin (anacarol@grad.icmc.usp.br)
+ * @author Robson Leonardo Ferreira Cordeiro (robson@icmc.usp.br)
+ */
 class stCellId {   
 
-   private:
+    public:
 
-      /**
-      * Vector that is going to be the index in which each bit refers to a dimension.
-	  * Possible unused bits will be in the "left side" of index[0].
-      */
-      unsigned char *index; 
+        /**
+         * Vector that is going to be the index in which each bit refers to a dimension.
+         * Possible unused bits will be in the "left side" of index[0].
+         */
+        std::unique_ptr<std::vector<unsigned char>> index; 
 
-      /**
-      * One position for each 8 dimensions.	  
-      */
-      int nPos;
+    public:
 
+        stCellId() {
+            index.reset();
+        }
 
-   public:
+        /**
+         * Constructor
+         */
+        stCellId(const size_t DIM){         
+            const size_t size = (DIM + 7) / 8;
+            index = std::unique_ptr<std::vector<unsigned char>>(new std::vector<unsigned char>());
+            index->resize(size, 0);
+        }//end stCellId
 
-      /**
-      * Constructor
-      */
-      stCellId(int DIM){	 
-         nPos = (int) ceil((double)DIM/8);
-         index = new unsigned char[nPos];  // one position for each 8 dimensions
-         memset(index,0,nPos); // clean the used memory
-      }//end stCellId
+        stCellId(const stCellId &other) {
+            if (other.index) {
+                index = std::unique_ptr<std::vector<unsigned char>>(new std::vector<unsigned char>());
+                *index = *other.index;
+            }
+        }
+        
 
-      /**
-      * Destructor
-      */
-      ~stCellId(){         
-         delete[] index;
-      }//end ~stCellId
+        /**
+         * Gets the value of the bit in position i
+         *
+         * @param i Bit position.
+         * @return the value of the bit in position i.
+         */
+        char getBitValue(const size_t i, const size_t DIM) { 
+            const size_t j = i + (8 * index->size()) - DIM;
+            const size_t p = j / 8;
+            const size_t k = 7 - j % 8;
+            return ((*index)[p] & (1 << k)) > 0;     
+        }//end getBitValue
 
-      /**
-      * Gets the value of the bit in position i
-      *
-      * @param i Bit position.
-	  * @return the value of the bit in position i.
-      */
-      char getBitValue(int i,int DIM) {		
-		int p; // char that stores the bit i
-		i += (nPos*8)-DIM; // i + number of unused bits
-	    for (p=0; i>7; i-=8,p++);	
-		return (index[p] << (i+24) >> 31);
-      }//end getBitValue
+        /**
+         * Inverts the value of the bit in position i
+         *
+         * @param i Bit position.
+         */
+        void invertBit(const size_t i, const size_t DIM) {  
+            const size_t j = i + (8 * index->size()) - DIM;
+            const size_t p = j / 8;
+            const size_t k = 7 - j % 8;
+            (*index)[p] ^= (1 << k);      
+        }//end invertBit
 
-      /**
-      * Inverts the value of the bit in position i
-      *
-      * @param i Bit position.
-      */
-      void invertBit(int i, int DIM) {	    
-		int p; // char that stores the bit i
-		i += (nPos*8)-DIM; // i + number of unused bits
-	    for (p=0; i>7; i-=8,p++);		
-        if (index[p] << (i+24) >> 31) {		
-		  index[p] -= ( 1 << (7-i) ); // set bit i to 0
-        } else {
-          index[p] += ( 1 << (7-i) ); // set bit i to 1
-        }//endif
-      }//end invertBit
+        /**
+         * Operator = assign a value to a variable.
+         *
+         * @param cell The stCellId to be assigned.
+         */
+        stCellId& operator= (const stCellId &cell) {  
+            if (!this->index) {
+                index = std::unique_ptr<std::vector<unsigned char>>(new std::vector<unsigned char>());
+            }
+            if (cell.index) {
+                *index = *cell.index;
+            }
+            return *this;
+        }//end operator =
 
-      /**
-      * Operator = assign a value to a variable.
-      *
-      * @param cell The stCellId to be assigned.
-      */
-      void operator = (stCellId &cell) {         
-         memcpy(this->index, (static_cast<stCellId &>(cell)).index, nPos);
-      }//end operator =
+        /**
+         * Operator == Compare two values.
+         *
+         * @param cell The stCellId to be compared.
+         * @return 0 if equal, <0 if this < cell, >0  if this > cell.
+         */
+        int operator== (const stCellId &cell) {  
+            return *this->index == *cell.index;     
+        }//end operator ==
 
-      /**
-      * Operator == Compare two values.
-      *
-      * @param cell The stCellId to be compared.
-      * @return 0 if equal, <0 if this < cell, >0  if this > cell.
-      */
-      int operator == (stCellId &cell) {         
-         return (memcmp (this->index, (static_cast<stCellId &>(cell)).index, nPos));
-	  }//end operator ==
-	
-	  void getIndex(unsigned char *index) {
-		 memcpy(index, this->index, nPos);
-	  }
-	
-	  void setIndex(unsigned char *index) {
-		 memcpy(this->index, index, nPos);
-	  }	
+        void getIndex(unsigned char *index) {
+            std::copy(this->index->begin(), this->index->end(), index);
+        }
 
+        void setIndex(const unsigned char *index) {
+            std::copy(index, index + this->index->size(), this->index->begin());
+        } 
+
+        void reset() {
+            this->index.reset();
+        }
 };
 
 #endif //__STCELLID_H
+

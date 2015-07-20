@@ -87,8 +87,8 @@
 
 #include "PointSource.h"
 
-#define INPUT "databases/12d.dat" //input data path
-#define OUTPUT "results/result12d.dat" //output path
+#define INPUT "databases/ds2.csv" //input data path
+#define OUTPUT "results/resultds12.dat" //output path
 
 // default values
 #define NORMALIZE_FACTOR 0 // Independent
@@ -189,7 +189,7 @@ int main(int argc, char **argv) {
 
 	unsigned int numCorrelationClusters=sCluster->getNumCorrelationClusters();
 
-	char **dimCorrelationClusters = sCluster->getDimCorrelationClusters();
+        std::vector<char*> dimCorrelationClusters = sCluster->getDimCorrelationClusters();
 	
 	// axes relevant to the found clusters
 	for (unsigned int i=0; i<numCorrelationClusters; i++) {

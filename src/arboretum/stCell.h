@@ -4,84 +4,134 @@
 #include "stCellId.h"
 
 class stCell {
-   public:
-     	static stCell* create(int DIM)
-    	{
-          char* buf = new char[sizeOf(DIM)];
-          return ::new (buf) stCell(DIM); 
-    	}
-        ~stCell() { 
-	  if (id) {
-	    delete id;
-	  }		  
+    public:
+        static stCell* create(const size_t DIM)
+        {
+            return new stCell(DIM);
         }
-	void destroy()
-    	{
-		this->~stCell();
-       		delete[] (char*)this;
-    	}
-	static size_t sizeOf(int DIM) {
-		return sizeof(stCell) + (DIM - 1) * sizeof(int);
-	}
-	  void insertPoint() {
-	     sumOfPoints++;		 
-	  }
-	  int getSumOfPoints() {
-	     return sumOfPoints;
-	  }
-	  char getUsedCell() {
-	     return usedCell;
-	  }	  
-	  void useCell() {
-	     usedCell = 1;
-	  }
-	  int getP(int i) {
-	     return P[i];
-	  }
-	  stCellId *getId() {
-	     return id;
-	  }
-	  void setId(stCellId *id,int DIM) {
-		 this->stCell::~stCell(); //clean any previous id
-		if(id) {
-		    this->id = new stCellId(DIM); //create a new id
-	     	    *(this->id) = *id; //copy content
-		} else {
-			this->id=NULL;
-		}
-	  }
-	  void insertPointPartial(stCellId *sonsCellId,int DIM) {
- 	     for (int i=0; i<DIM; i++) {
-	        if (!sonsCellId->getBitValue(i,DIM)) {
-		       P[i]++; // counts the point, since it is in 
-			           // this cell's lower half regarding i
-	        }
-	     }
-	  }
-	  void copy(stCell *cell,int DIM) { 
-		  //copy the content of this to cell
-	  	  cell->usedCell = usedCell;
-		  for (int i=0; i<DIM; i++) {
-			  cell->P[i] = P[i];
-		  } 
-		  cell->sumOfPoints = sumOfPoints;
-		  cell->setId(id,DIM);
-	  }
 
-   private:
- 	stCell(int DIM) {
-	     	usedCell = 0;
-		sumOfPoints = 0;
-		id = 0;
-		for (int i=0; i<DIM; i++) {
-                   P[i] = 0;
-        	}
-     	}
+        stCell() : usedCell(0), sumOfPoints(0), id(stCellId()) {
+        }
 
-      char usedCell;     
-      int sumOfPoints;
-      stCellId *id;
-      int P[1];
+        stCell(const size_t DIM) :
+                usedCell(0), sumOfPoints(0), id(stCellId(DIM)) {
+            P.resize(DIM);
+        }
+        
+        stCell(const stCell& cell) :
+                usedCell(cell.usedCell), sumOfPoints(cell.sumOfPoints), 
+                id(cell.id), P(cell.P) {
+        }
+        
+        stCell& operator= (const stCell &cell) {  
+            usedCell = cell.usedCell;
+            sumOfPoints = cell.sumOfPoints;
+            id = cell.id;
+            P = cell.P;
+            return *this;
+        }
+
+        unsigned char* serialize() const {
+            size_t size = this->size();
+            unsigned char* result = new unsigned char[size];
+            unsigned char* p = result;
+
+            *(char*)p = usedCell;   p += sizeof(char);
+            *(int*)p = sumOfPoints; p += sizeof(int);
+            p += sizeof(stCellId);
+            *(size_t*)p = P.size(); p += sizeof(size_t);
+
+            //std::cout << "Serialized to size " << P.size() << std::endl << std::flush;
+            for (size_t i = 0; i < P.size(); ++i) {
+                *(size_t*)p = P[i]; p += sizeof(size_t);
+            }
+
+            return result;
+        }
+
+        size_t size() const {
+            return sizeof(char) +
+                sizeof(int) +
+                sizeof(stCellId) +
+                sizeof(size_t) * (P.size() + 1);
+        }
+
+        static size_t size(const size_t p) {
+            return sizeof(char) +
+                sizeof(int) +
+                sizeof(stCellId) +
+                sizeof(size_t) * (p + 1);
+        }
+
+        static stCell deserialize(unsigned char* s) {
+            char usedCell = *(char*)s;  s += sizeof(char);
+            int sumPoints = *(int*)s;   s += sizeof(int);
+            s += sizeof(stCellId);
+            size_t size = *(size_t*)s;  s += sizeof(size_t);
+            std::vector<size_t> d;
+            for (size_t i = 0; i < size; ++i) {
+                d.push_back(*(size_t*)s); s += sizeof(size_t);
+            }
+
+            stCell result(size);
+            result.usedCell = usedCell;
+            result.sumOfPoints = sumPoints;
+            result.P = d;
+
+            return result;
+        }
+
+        void insertPoint() {
+            sumOfPoints++;          
+        }
+        int getSumOfPoints() {
+            return sumOfPoints;
+        }
+        char getUsedCell() {
+            return usedCell;
+        }   
+        void useCell() {
+            usedCell = 1;
+        }
+        int getP(const size_t i) const {
+            return P[i];
+        }
+        stCellId *getId() {
+            return &id;
+        }
+        void setId(const stCellId *id, const size_t DIM) {
+            if(id) {
+                this->id = *id;
+            } else {
+                this->id.reset();
+            }
+        }
+        void insertPointPartial(stCellId *sonsCellId, const size_t DIM) {
+            for (size_t i = 0; i < DIM; i++) {
+                if (!sonsCellId->getBitValue(i, DIM)) {
+                    P[i]++;
+                }
+            }
+        }
+        void copy(stCell *cell, const size_t DIM) const { 
+            cell->usedCell = usedCell;
+            cell->P = P;
+            cell->sumOfPoints = sumOfPoints;
+            cell->setId(&id, DIM);
+        }
+
+        void reset() {
+            id.reset();
+        }
+
+    public:
+
+
+        char usedCell;     
+        int sumOfPoints;
+        stCellId id;
+        std::vector<size_t> P;
 };
 
 #endif //__STCELL_H
+
