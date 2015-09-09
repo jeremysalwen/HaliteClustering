@@ -171,7 +171,7 @@ int main(int argc, char **argv) {
 	}
 
 	// creates an object of the class haliteClustering
-    haliteClustering *sCluster = new haliteClustering(*datasource, NORMALIZE_FACTOR, (2*DIM), -1, atof(argv[1]), atoi(argv[2]), atoi(argv[3]), atoi(argv[4]), dbType, (memory & 2));		
+    haliteClustering *sCluster = new haliteClustering(*datasource, NORMALIZE_FACTOR, (2*DIM), -1, atof(argv[1]), atoi(argv[2]), atoi(argv[3]), atoi(argv[4]), dbType, (memory & 3));		
 	
 	printf("The tree was built.\n");
 	printElapsed(); // prints the elapsed time
