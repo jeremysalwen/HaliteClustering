@@ -1,11 +1,20 @@
-Halite: src/*.cpp src/*.h src/arboretum/*.h
-	g++ src/Halite.cpp src/Utile.cpp -o Halite -ldb_cxx `pkg-config --cflags --libs opencv` -Wall -Wextra  -std=c++11 -g -pedantic
+SRC := $(wildcard src/*.cpp) $(wildcard src/arboretum/*.cpp) 
+OBJ := $(SRC:.cpp=.o)
+
+CXXFLAGS := `pkg-config --cflags opencv` -Wall -Wextra -std=c++11 -g -pedantic
+LDFLAGS := -ldb_cxx `pkg-config --libs opencv` -g
+
+Halite: $(OBJ)
+	g++ $(OBJ) $(LDFLAGS) -o Halite
 
 demo:   Halite
 	./Halite 1e-10 4 1 1 0
 
 clean:
-	\rm -f ./results/result12d.dat
+	rm -f ./results/result12d.dat
 
 spotless: clean
-	\rm -f Halite
+	rm -f Halite
+
+obj/%.o: src/%.cpp
+	g++ $(CXXFLAGS) -c -o $@ $<

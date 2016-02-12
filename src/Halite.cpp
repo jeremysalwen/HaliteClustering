@@ -77,15 +77,11 @@
 #include <string.h>
 #include <time.h>
 
-#ifndef __GNUG__
 #include "haliteClustering.h"
-#endif //__GNUG__
-
-#ifdef __GNUG__
-#include "haliteClustering.cpp"
-#endif //__GNUG__
 
 #include "PointSource.h"
+
+using namespace Halite;
 
 #define INPUT "databases/ds2.csv" //input data path
 #define OUTPUT "results/resultds12.dat" //output path
