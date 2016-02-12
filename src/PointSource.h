@@ -17,12 +17,14 @@ class PointSource {
 		virtual const double* readPoint() = 0;
 		virtual ~PointSource() {};
 };
+template <typename T>
 class PackedArrayPointSource : public PointSource {
 	public:
-		PackedArrayPointSource(double* array, size_t dim, size_t size) {
+		PackedArrayPointSource(T* array, size_t dim, size_t size) {
 			this->data=array;
 			this->dim=dim;
 			this->size=size;
+			this->index=0;
 		}
 		size_t dimension()  {
 			return dim;
@@ -37,7 +39,7 @@ class PackedArrayPointSource : public PointSource {
 			return &data[index*dim];
 		}
 	private:
-		double* data;
+		T* data;
 		size_t index;
 		size_t dim;
 		size_t size;
