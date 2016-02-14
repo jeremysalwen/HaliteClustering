@@ -99,7 +99,7 @@ class stCell {
         stCellId *getId() {
             return &id;
         }
-        void setId(const stCellId *id, const size_t DIM) {
+        void setId(const stCellId *id) {
             if(id) {
                 this->id = *id;
             } else {
