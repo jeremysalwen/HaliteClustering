@@ -158,7 +158,7 @@ class stCountingTree {
             if (found) {
                 stCell tmp = stCell::deserialize(cellSerialized);
                 *cell = new stCell(tmp);
-                (*cell)->setId(id,P.size());
+                (*cell)->setId(id);
             }
 
             delete[] cellSerialized;
@@ -213,7 +213,7 @@ class stCountingTree {
                 delete[] serialized;
 
                 id.setIndex(fullId+(l*nPos));
-                parentsVector[l]->setId(&id,P.size()); //copy the id
+                parentsVector[l]->setId(&id); //copy the id
             }
         }
 
