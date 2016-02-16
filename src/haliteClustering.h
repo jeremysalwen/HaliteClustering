@@ -1,3 +1,4 @@
+// -*-c++-*-
 /**********************************************************************
  * GBDI Arboretum - Copyright (c) 2002-2009 GBDI-ICMC-USP
  *
@@ -79,6 +80,8 @@
 #include "PointSource.h"
 
 #include "Utile.h"
+#include "Classifier.h"
+#include "CorrelationCluster.h"
 
 #include <math.h>
 #include <stdio.h>
@@ -130,76 +133,26 @@ namespace Halite {
     void findCorrelationClusters();
 
     /**
-     * Finds clustering of a point, and writes all clusters to the out iterator
-     * if you are using hard clustering, just pass a pointer to the integer you want it to write to (it will not write anything for outliers)
-     * if you are using soft clustering, pass a std::back_inserter to your favorite container to store the results.
-     */
-    template<typename Iterator>
-      Iterator assignToClusters(const double* point, Iterator out) {
-
-      double *normalizeSlope = getCalcTree()->getNormalizeSlope();
-      double *normalizeYInc = getCalcTree()->getNormalizeYInc();
-      for (size_t betaCluster=0; betaCluster < numBetaClusters; betaCluster++) {
-	bool belongsTo=true;
-	// undoes the normalization and verify if the current point belongs to the current beta-cluster
-	for (int dim=0; belongsTo && dim<DIM; dim++) {				
-	  if (! (point[dim] >= ((minBetaClusters[betaCluster][dim]*normalizeSlope[dim])+normalizeYInc[dim]) && 
-		 point[dim] <= ((maxBetaClusters[betaCluster][dim]*normalizeSlope[dim])+normalizeYInc[dim])) ) {
-	    belongsTo=false; // this point does not belong to the current beta-cluster
-	  }//end if
-	}//end for
-	if(belongsTo) {
-	  *out++ = correlationClustersBelongings[betaCluster]+1;
-	  if(this->hardClustering) {
-	    return out;
-	  }
-	}	
-      }//end for
-      return out;
-    }
-
-
-    /**
      * Gets the number of beta-clusters found.
      */
-    int getNumBetaClusters() {
-      return numBetaClusters;
-    }//end getNumBetaClusters
+    size_t numBetaClusters() {
+      return classifier.betaClusters.size();
+    }
 
     /**
      * Gets the number of correlation clusters (merged).
      */
-    int getNumCorrelationClusters() {
-      return numCorrelationClusters;
-    }//end getNumCorrelationClusters
+    int numCorrelationClusters() {
+      return correlationClusters.size();
+    }
 
-    /**
-     * Gets the minimum bounds of the beta-clusters found.
-     */
-    std::vector<double*>& getMinBetaClusters() {
-      return minBetaClusters;
-    }//end getMinBetaClusters
+    Classifier<double>& getClassifier() {
+      return classifier;
+    }
 
-    /**
-     * Gets the maximum bounds of the beta-clusters found.
-     */
-    std::vector<double*>& getMaxBetaClusters() {
-      return maxBetaClusters;
-    }//end getMaxBetaClusters
-
-    /**
-     * Gets the relevant dimensions to the correlation clusters.
-     */
-    std::vector<char*>& getDimCorrelationClusters() {
-      return dimCorrelationClusters;
-    }//end getDimCorrelationClusters
-
-    /**
-     * Gets the correlation clusters belongings.
-     */
-    std::vector<int>& getCorrelationClustersBelongings() {
-      return correlationClustersBelongings;
-    }//end getCorrelationClustersBelongings
+    std::vector<CorrelationCluster>& getCorrelationClusters() {
+      return correlationClusters;
+    }
 
     /**
      * Gets the used counting tree.
@@ -219,12 +172,12 @@ namespace Halite {
     /**
      * Dimension of data
      */
-    int DIM;
+    size_t DIM;
 
     /**
      * Size of data
      */
-    int SIZE;
+    size_t SIZE;
 
     /**
      * Time spent in the normalization.
@@ -256,7 +209,6 @@ namespace Halite {
      * Pointers to the central cell of a found beta-cluster and to a neighbour cell.
      */
     stCell betaClusterCenter;
-    stCell *neighbour;
 
     /**
      * Vectors to describe the positions of the beta-cluster center in the data space.
@@ -273,8 +225,8 @@ namespace Halite {
     /**
      * Vectors with pointers to the parents of a beta-cluster center and of a neighbour.
      */
-    stCell **betaClusterCenterParents;
-    stCell **neighbourParents;
+    std::vector<stCell> betaClusterCenterParents;
+
 
     /**
      * Vectors used when discovering relevant attributes.
@@ -297,42 +249,25 @@ namespace Halite {
      */
     double pThreshold;
 
-    /**
-     * Number of beta-clusters found.
-     */
-    size_t numBetaClusters;
 
-    /**
-     * Number of correlation clusters (merged).
-     */
-    int numCorrelationClusters;
+    Classifier<double> classifier;
+    std::vector<CorrelationCluster> correlationClusters;
 
-    /**
-     * Pointers to the vectors that describe the beta-clusters and the correlation clusters found.
-     */
-    std::vector<double*> minBetaClusters;
-    std::vector<double*> maxBetaClusters;
-    std::vector<char*> dimBetaClusters;
-    std::vector<char*> dimCorrelationClusters;
-    std::vector<int> correlationClustersBelongings;
 
     /**
      * Merges beta-clusters that share some database space.
      */
     void mergeBetaClusters();
 
-    int shouldMerge(int i, int j);
+    int shouldMerge(BetaCluster<double>&  icl, BetaCluster<double>& j);
 
-    int cost(int i, int j);
+    int cost(BetaCluster<double>*  icl, BetaCluster<double>* j);
 
     int indCost(double n);
 
-    cv::Mat inputPCA(int i, int j, int *clusterSize);
+    cv::Mat inputPCA(const BetaCluster<double>* iCl, const BetaCluster<double>* jCl);
 
-    std::vector<int> costBetaClusters;
-    std::vector<int> levelBetaClusters;
-
-    /**
+     /**
      * Calculates the cThreshold based on the Minimun Description Length (MDL) method.
      *
      * @param attributesRelevance Vector with the calculed relevances of each attribute.
@@ -365,7 +300,7 @@ namespace Halite {
      * @param level The cell level in the counting tree.
      *
      */
-    int applyConvolution(stCell *cell, stCell **cellParents,
+    int applyConvolution(stCell& cell, std::vector<stCell>& cellParents,
 			 int level);
 
     /**
@@ -378,7 +313,7 @@ namespace Halite {
      * @param level The level of cell in the counting tree.
      *
      */
-    void cellPosition(stCell *cell, stCell **cellParents,
+    void cellPosition(stCell& cell, std::vector<stCell>& cellParents,
 		      std::vector<double>& min, std::vector<double>& max, int level);
 
     /**
@@ -392,7 +327,7 @@ namespace Halite {
      * @param j The dimension to be considered.
      *
      */
-    void cellPositionDimensionE_j(stCell *cell, stCell **cellParents,
+    void cellPositionDimensionE_j(stCell& cell, std::vector<stCell>& cellParents,
 				  double *min, double *max, int level, int j);
 
     /**
@@ -408,9 +343,9 @@ namespace Halite {
      * ps.: externalNeighbour assumes that cellParents and neighbourParents have the very
      *      same containt when the function is called.
      */
-    int externalNeighbour(int dimIndex, stCell *cell, stCell **neighbour,
-			  stCell **cellParents,
-			  stCell **neighbourParents, int level);
+    int externalNeighbour(int dimIndex, stCell& cell, stCell* neighbour,
+			  std::vector<stCell>& cellParents,
+			  std::vector<stCell>& neighbourParents, int level);
 
     /**
      * Finds the internal face neighbour of cell in a determined dimension.
@@ -422,7 +357,9 @@ namespace Halite {
      * @param level The level of cell in the counting tree.
      *
      */
-    int internalNeighbour(int dimIndex, stCell *cell, stCell **neighbour, stCell **cellParents, int level);
+    int internalNeighbour(int dimIndex, stCell& cell, stCell* neighbour,
+			  std::vector<stCell>& cellParents,
+			  int level);
 
     /**
      * compare function used by the qsort.
@@ -463,11 +400,9 @@ namespace Halite {
      */
     void minMax(PointSource& data, double *min, double *max);
 
-    void resizeIfNecessary();
     size_t getCenter(size_t level);
 
   };//end haliteClustering
-
   //----------------------------------------------------------------------------
 } //end Halite namespace
 #endif //__HALITECLUSTERING_H

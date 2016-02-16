@@ -83,8 +83,8 @@
 
 using namespace Halite;
 
-#define INPUT "databases/ds2.csv" //input data path
-#define OUTPUT "results/resultds12.dat" //output path
+#define INPUT "databases/12d.dat" //input data path
+#define OUTPUT "results/result12d.dat" //output path
 
 // default values
 #define NORMALIZE_FACTOR 0 // Independent
@@ -146,6 +146,7 @@ int main(int argc, char **argv) {
 	try {
 		db=new TextFilePointSource(INPUT);
 	} catch(std::exception& e) {
+	  std::cout<<e.what()<<"\n";
 		printf("'Halite could not open database file.\n");
 		return 1;
 	}
@@ -167,7 +168,7 @@ int main(int argc, char **argv) {
 	}
 
 	// creates an object of the class haliteClustering
-    haliteClustering *sCluster = new haliteClustering(*datasource, NORMALIZE_FACTOR, (2*DIM), -1, atof(argv[1]), atoi(argv[2]), atoi(argv[3]), atoi(argv[4]), dbType, (memory & 2));		
+	haliteClustering *sCluster = new haliteClustering(*datasource, NORMALIZE_FACTOR, (2*DIM), -1, atof(argv[1]), atoi(argv[2]), atoi(argv[3]), atoi(argv[4]), dbType, (memory & 2));		
 	
 	printf("The tree was built.\n");
 	printElapsed(); // prints the elapsed time
@@ -183,18 +184,20 @@ int main(int argc, char **argv) {
 	
 	// mounts the result file
 
-	unsigned int numCorrelationClusters=sCluster->getNumCorrelationClusters();
 
-        std::vector<char*> dimCorrelationClusters = sCluster->getDimCorrelationClusters();
-	
+	unsigned int numCorrelationClusters=sCluster->numCorrelationClusters();
+
+	Classifier<double>& classifier=sCluster->getClassifier();
+	std::vector<CorrelationCluster>& correlationClusters=sCluster->getCorrelationClusters();
 	// axes relevant to the found clusters
 	for (unsigned int i=0; i<numCorrelationClusters; i++) {
-		fputs("ClusterResult",result);
-		fprintf(result,"%d",i+1);	
-		for (unsigned int j=0; j<DIM; j++) {
-			(dimCorrelationClusters[i][j]) ? fputs(" 1",result) : fputs(" 0",result);
-		}//end for
-		fputs("\n",result); // writes the relevant axes to the current cluster in the result file
+	  CorrelationCluster& correlationCluster=correlationClusters[i];
+	  fputs("ClusterResult",result);
+	  fprintf(result,"%d",i+1);	
+	  for (unsigned int j=0; j<DIM; j++) {
+	    (correlationCluster.relevantDimension[j]) ? fputs(" 1",result) : fputs(" 0",result);
+	  }//end for
+	  fputs("\n",result); // writes the relevant axes to the current cluster in the result file
 	}//end for
 	
 	// labels each point after the clusters found
@@ -205,7 +208,7 @@ int main(int argc, char **argv) {
 	for (datasource->restartIteration(); datasource->hasNext(); point++) {
 		onePoint=datasource->readPoint();
 		std::vector<int> clusters;
-		sCluster->assignToClusters(onePoint,std::back_inserter(clusters));
+		classifier.assignToClusters(onePoint,std::back_inserter(clusters));
 		for(unsigned int i=0; i<clusters.size(); i++) {
 			fprintf(result, "%d %d\n", point+1, clusters[i]);
 		}

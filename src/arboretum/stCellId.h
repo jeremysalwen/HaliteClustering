@@ -103,42 +103,32 @@ class stCellId {
          * Vector that is going to be the index in which each bit refers to a dimension.
          * Possible unused bits will be in the "left side" of index[0].
          */
-        std::unique_ptr<std::vector<unsigned char>> index; 
+        std::vector<unsigned char> index; 
 
     public:
-
-        stCellId() {
-            index.reset();
-        }
 
         /**
          * Constructor
          */
+	stCellId() {
+	}
         stCellId(const size_t DIM){         
             const size_t size = (DIM + 7) / 8;
-            index = std::unique_ptr<std::vector<unsigned char>>(new std::vector<unsigned char>());
-            index->resize(size, 0);
+            index = std::vector<unsigned char>();
+            index.resize(size, 0);
         }//end stCellId
 
-        stCellId(const stCellId &other) {
-            if (other.index) {
-                index = std::unique_ptr<std::vector<unsigned char>>(new std::vector<unsigned char>());
-                *index = *other.index;
-            }
-        }
-        
-
-        /**
+	/**
          * Gets the value of the bit in position i
          *
          * @param i Bit position.
          * @return the value of the bit in position i.
          */
         char getBitValue(const size_t i, const size_t DIM) { 
-            const size_t j = i + (8 * index->size()) - DIM;
+            const size_t j = i + (8 * index.size()) - DIM;
             const size_t p = j / 8;
             const size_t k = 7 - j % 8;
-            return ((*index)[p] & (1 << k)) > 0;     
+            return (index[p] & (1 << k)) > 0;     
         }//end getBitValue
 
         /**
@@ -147,47 +137,32 @@ class stCellId {
          * @param i Bit position.
          */
         void invertBit(const size_t i, const size_t DIM) {  
-            const size_t j = i + (8 * index->size()) - DIM;
+            const size_t j = i + (8 * index.size()) - DIM;
             const size_t p = j / 8;
             const size_t k = 7 - j % 8;
-            (*index)[p] ^= (1 << k);      
+            index[p] ^= (1 << k);      
         }//end invertBit
 
-        /**
-         * Operator = assign a value to a variable.
-         *
-         * @param cell The stCellId to be assigned.
-         */
-        stCellId& operator= (const stCellId &cell) {  
-            if (!this->index) {
-                index = std::unique_ptr<std::vector<unsigned char>>(new std::vector<unsigned char>());
-            }
-            if (cell.index) {
-                *index = *cell.index;
-            }
-            return *this;
-        }//end operator =
-
-        /**
+	/**
          * Operator == Compare two values.
          *
          * @param cell The stCellId to be compared.
          * @return 0 if equal, <0 if this < cell, >0  if this > cell.
          */
         int operator== (const stCellId &cell) {  
-            return *this->index == *cell.index;     
+            return this->index == cell.index;     
         }//end operator ==
 
-        void getIndex(unsigned char *index) {
-            std::copy(this->index->begin(), this->index->end(), index);
+	void getIndex(unsigned char *index) {
+	  std::copy(this->index.begin(), this->index.end(), index);
         }
 
         void setIndex(const unsigned char *index) {
-            std::copy(index, index + this->index->size(), this->index->begin());
+	  std::copy(index, index + this->index.size(), this->index.begin());
         } 
 
         void reset() {
-            this->index.reset();
+	  index.clear();
         }
 };
 
