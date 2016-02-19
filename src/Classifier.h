@@ -39,8 +39,9 @@ namespace Halite {
     
     bool hardClustering;
 
-    std::vector<D> normalizeSlope;
-    std::vector<D> normalizeYInc;
+    const double* normalizeSlope;
+    const double* normalizeYInc;
+
     std::vector<BetaCluster<D> > betaClusters;
   };
 }

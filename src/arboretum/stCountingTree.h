@@ -149,6 +149,7 @@ class stCountingTree {
     }
   }
   void commitCell(std::vector<stCell>& parents, stCell *cell, size_t level) {
+    std::cout<<"commitcell\n";
     const size_t nPos = (P.size() + 7) / 8;
     std::vector<unsigned char> fullId((level+1)*nPos, 0);
 
@@ -237,6 +238,12 @@ class stCountingTree {
       //and udates the partial counts for cellAndParents[level]
       deepInsert(level+1, min, max, point, fullId, cellAndParents);
 
+      /*std::cout <<"insertkey ";
+        for(size_t i=0; i<(level+1)*nPos; i++) {
+	std::cout <<(int)(fullId[i]);
+	}
+       cellAndParents[level].print(normalizeSlope.size());
+       */
       // insert/update the dataset
       Dbt key(fullId.data(),(level+1)*nPos);
       //stCell tmp= stCell(P.size());
@@ -244,6 +251,17 @@ class stCountingTree {
       //tmp.reset();
       serialized = cellAndParents[level].serialize();
       Dbt data(serialized, stCell::size(P.size()));
+      /*    
+      std::cout <<"put lvl "<<level<<"\n";
+		for(int i=0; i<(level+1)*nPos; i++) {
+		  std::cout<<(int)fullId[i]<<" ";
+		}
+		std::cout<<"\n";
+		for(int i=0; i<stCell::size(P.size()); i++) {
+		  std::cout <<(int)serialized[i]<<" ";
+		}
+		std::cout<<"\n";
+*/
       levels[level]->put(NULL, &key, &data, 0);
       delete[] serialized;
     }

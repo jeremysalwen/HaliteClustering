@@ -131,7 +131,9 @@ namespace Halite {
 
     // builds pointers to describe the found clusters
     correlationClusters.clear();
-    classifier=Classifier<double>();
+    classifier.normalizeSlope=calcTree->getNormalizeSlope();
+    classifier.normalizeYInc=calcTree->getNormalizeYInc();
+    
  
     //create memory space for betaClusterCenter
         betaClusterCenter = stCell(DIM);
@@ -164,8 +166,10 @@ namespace Halite {
 	// apply the convolution matrix to each grid cell in the current level
 	// finds the cell with the bigest convolution value
 	if (walkThroughConvolution(level)) {
+	  printf("walkthrough\n");
 	  betaClusterCenter.useCell(); // visited cell
 	  calcTree->commitCell(betaClusterCenterParents, &betaClusterCenter, level); // commit changes in the tree
+	  printf("level %d\n", level);
 	  if (level) {
 	    // pointer to a neighbour of the father
 	    stCell fatherNeighbour;
@@ -174,12 +178,14 @@ namespace Halite {
 	    for (size_t i = 0; i < DIM; i++) {
 	      // initiates total with the number of points in the father
 	      total=betaClusterCenterParents[level-1].getSumOfPoints();
+	      printf("total %d\n",total);
 	      // discovers the number of points in the center
 	      if (betaClusterCenter.getId()->getBitValue(i,DIM)) {
 		center = total - betaClusterCenterParents[level-1].getP(i);
 	      } else {
 		center = betaClusterCenterParents[level-1].getP(i);
 	      }//end if
+	      printf("center %lu\n",center);
 
 	      // looks for the points in the direct neighbours of the father
 	      if (internalNeighbour(i,betaClusterCenterParents[level-1],&fatherNeighbour,betaClusterCenterParents,level-1)) {
@@ -197,6 +203,7 @@ namespace Halite {
 	      attributesRelevance[i] = (100*center)/((double)total/6);
 	      // right critical value for the statistical test
 	      int criticalValue = GetCriticalValueBinomialRight2(total, (double)1/6, pThreshold);
+	      printf("criticalValue %d\n",criticalValue);
 	      if(criticalValue<0) {
 		ok=1;
 	      }	else {
@@ -210,6 +217,7 @@ namespace Halite {
 	      old_critical[i] = criticalValue;
 	    }//end for
 	  } else { // analyzes each dimension based on the points distribution of the entire database
+	    printf("nowalkthrough\n");
 	    // initiate the total of points
 	    total=calcTree->getSumOfPoints();
 	    for (size_t i = 0; i < DIM; i++) {
@@ -249,11 +257,14 @@ namespace Halite {
       printf("a beta-cluster was found at the Counting-tree level %d (%zu).\n",level,numBetaClusters()); // prints the level in which a new beta-cluster was found
 
       BetaCluster<double>& newCluster=classifier.betaClusters.back();
- 
+
+      printf("relevantDimensions ");
       // important dimensions
       for (size_t i = 0; i < DIM; i++) {
 	newCluster.relevantDimension[i] = (attributesRelevance[i] >= cThreshold);
+	printf("%d ",newCluster.relevantDimension[i]);
       }//end for
+      printf("\n");
       
       // analyzes neighbours in important dimensions to verify which of them also belong to the found cluster
       for (size_t i = 0; i < DIM; i++) {
@@ -270,9 +281,11 @@ namespace Halite {
 	  if (internalNeighbour(i,betaClusterCenter,&neighbour,betaClusterCenterParents,level)) { // internal neighbour in important dimension always belongs to the cluster
 	    // neighbour's position in the data space
 	    cellPositionDimensionE_j(neighbour,betaClusterCenterParents,&minNeighbour,&maxNeighbour,level,i);
-	    if (newCluster.max[i] > maxNeighbour) {
+	    std::cout<<"newmax "<<maxBetaClusterCenter[i]<<" "<<maxNeighbour<<"\n";
+	    if (maxBetaClusterCenter[i] > maxNeighbour) {
 	      neighbourhood[i]='I'; // inferior neighbour in i belongs to the cluster
 	    } else {
+	      std::cout<<"case2\n";
 	      neighbourhood[i]='S'; // superior neighbour in i belongs to the cluster
 	    }//end if
 	  }//end if
@@ -287,6 +300,7 @@ namespace Halite {
 	      if (maxBetaClusterCenter[i] > maxNeighbour) {
 		neighbourhood[i]='I'; // inferior neighbour in i belongs to the cluster
 	      } else {
+		std::cout<<"case1\n";
 		neighbourhood[i]='S'; // superior neighbour in i belongs to the cluster
 	      }//end if
 	    } else {
@@ -301,6 +315,7 @@ namespace Halite {
       for (size_t i = 0; i < DIM; i++) {
 	if (newCluster.relevantDimension[i]) { // dimension important to the cluster
 	  // analyzes if the neighbours in i also belong to the cluster
+	  std::cout<<"neigh"<<i<<" "<<neighbourhood[i]<<"\n";
 	  switch (neighbourhood[i]) {
 	  case 'B': // both inferior and superior neighbours in i belong to the cluster
 	    minBetaClusterCenter[i]-=length;
@@ -387,7 +402,7 @@ namespace Halite {
 
   //---------------------------------------------------------------------------
   int haliteClustering::walkThroughConvolution(int level) {
-
+    cout << "walkthrough "<<level <<"\n";
     //try to get the db in the current level
     Db *db = calcTree->getDb(level);
     if (!db)
@@ -398,6 +413,7 @@ namespace Halite {
 
     //prepare the fullId array
     int nPos = (int) ceil((double)DIM/8);
+    cout <<"npos "<<nPos<<"\n";
     unsigned char *fullId = new unsigned char[(level+1)*nPos];
     unsigned char *ccFullId = new unsigned char[(level+1)*nPos];
     memset(fullId,0,(level+1)*nPos);
@@ -428,9 +444,17 @@ namespace Halite {
     std::vector<double> minCell(DIM, 0.0);
 
     // iterate over the database, retrieving each record in turn
-    int ret;
+    int ret, cnt=0;
     while ((ret = cursorp->get(&searchKey, &searchData, DB_NEXT)) == 0) {
+      cnt++;
       stCell cell = stCell::deserialize(serialized);
+      cell.print(DIM);
+      for(size_t i=0; i<(level+1)*nPos; i++) {
+	cout <<(int)fullId[i]<<" ";
+      }
+
+      cout<<"\n";
+     
       // Does not analyze cells analyzed before and cells that can't be the biggest convolution center.
       // It speeds up the algorithm, specially when neighbourhoodConvolutionValue <= 0
 
@@ -438,6 +462,7 @@ namespace Halite {
 					((cell.getSumOfPoints()*centralConvolutionValue) > biggestConvolutionValue) ||
 					( ((cell.getSumOfPoints()*centralConvolutionValue) == biggestConvolutionValue) &&
 					  (memcmp(fullId, ccFullId, (level+1)*nPos) < 0) ) ) )) {
+	printf("cont %d\n",cnt);
 	continue;
       }
       //set id for cell
@@ -445,42 +470,58 @@ namespace Halite {
       cell.setId(id); //copy from id to cell->id
       //finds the parents of cell
       calcTree->findParents(fullId,parentsVector,level);
+      for(int i=0; i<level; i++) {
+	cout<<"   parent"<<i<<" ";
+	parentsVector[i].print(DIM);
+      }
       // discovers the position of cell in the data space
       cellPosition(cell,parentsVector,minCell,maxCell,level);
+
       // verifies if this cell belongs to a cluster found before
       clusterFoundBefore=0;
-      for (BetaCluster<double>& bCluster : classifier.betaClusters) {
+      for (int i=0; i<classifier.betaClusters.size(); i++) {
+	BetaCluster<double>& bCluster=classifier.betaClusters[i];
 	clusterFoundBefore = 1;
-	for (size_t j = 0; clusterFoundBefore && j<DIM; j++) {
+	for (size_t j = 0; j<DIM; j++) {
 	  // Does not cut off cells in a level upper than the level where a cluster was found
+	  std::cout <<"C"<<i<<" "<< maxCell[j] << " " << bCluster.max[j] << " " <<minCell[j] << " " <<bCluster.min[j]<<"\n";
 	  if (!(maxCell[j] <= bCluster.max[j] && minCell[j] >= bCluster.min[j])) {
 	    clusterFoundBefore = 0;
+	    break;
 	  }//end if
 	}//end for
+	if(clusterFoundBefore)
+	  break;
       }//end for
 
       if (clusterFoundBefore) { // the cell doesn't belong to any found cluster
 	// applies the convolution matrix to cell
+	printf("foundb4 %d\n",cnt);
 	continue;
       }
+
+      cout<< "neighborhoodconvolutionvalue "<<neighbourhoodConvolutionValue<<"\n";
       if (neighbourhoodConvolutionValue) {
 	newConvolutionValue=applyConvolution(cell,parentsVector,level);
+	cout<< "newconv "<<newConvolutionValue<<"\n";
       } else {
 	newConvolutionValue=centralConvolutionValue*(cell.getSumOfPoints()); // when the neighbourhood weight is zero
       }//end if
+
       if ( (newConvolutionValue > biggestConvolutionValue) ||
 	   ((newConvolutionValue == biggestConvolutionValue) && (memcmp(fullId, ccFullId, (level+1)*nPos) < 0))) {
+
 	// until now, cell is the biggest convolution value, thus, set the new biggest value and copy
 	// cell and its parents to betaClusterCenter and its parents
 	biggestConvolutionValue = newConvolutionValue;
 	memcpy(ccFullId, fullId, (level+1)*nPos);
 	betaClusterCenter=cell;
-
 	for (int j = 0;j<level;j++) {
 	  betaClusterCenterParents[j]=parentsVector[j];
 	}//end for
       }//end if
     }//end while
+    printf("loops %d\n",cnt);
     if (ret != DB_NOTFOUND) { //it should never enter here
       cout << "Error!" << endl;
       return 0; //error
@@ -530,19 +571,22 @@ namespace Halite {
   //---------------------------------------------------------------------------
   void haliteClustering::cellPosition(stCell& cell, std::vector<stCell>& cellParents,
 				      std::vector<double>& min, std::vector<double>& max, int level) {
-
+  std::cout<<"cellpos "<<level<<"\n";
       if (level) {
 	cellPosition(cellParents[level-1],cellParents,min,max,level-1);
 	for (size_t i = 0; i < DIM; i++) {
+	  std::cout<<"flipval "<<(int)cell.id.getBitValue(i, DIM)<<"\n";
 	  if (cell.id.getBitValue(i,DIM)) { // bit in the position i is 1
 	    min[i] += ((max[i]-min[i])/2);
 	  } else { // bit in the position i is 0
+	    std::cout<<"set max "<<max[i] <<" "<<min[i]<<"\n";
 	    max[i] -= ((max[i]-min[i])/2);
 	  }//end if
 	}//end for
       } else { // level zero
 	for (size_t i = 0; i < DIM; i++) {
 	  if (cell.id.getBitValue(i,DIM)) { // bit in the position i is 1
+	    		  std::cout<<"set max 1\n";
 	    min[i] = 0.5;
 	    max[i] = 1;
 	  } else { // bit in the position i is 0
@@ -719,7 +763,9 @@ namespace Halite {
       BetaCluster<double>& iCl=classifier.betaClusters[i];
       for(size_t j=i+1; j<numBetaClusters(); j++) {
 	BetaCluster<double>& jCl=classifier.betaClusters[j];
+	std::cout<<"shouldmerge " << i <<","<<j<<"\n";
 	if(shouldMerge(iCl,jCl)) {
+	  	      std::cout<<"yes\n";
 	  ds.union_set(i,j);
 	}
       }
@@ -728,6 +774,7 @@ namespace Halite {
     std::vector<int> relabeling(numBetaClusters(),-1);
     for(size_t i=0; i<numBetaClusters(); i++) {
       size_t rep = ds.find_set(i);
+      std::cout <<"IT IS " << i <<": "<<rep<<"\n";
       if(relabeling[rep] == -1) {
 	relabeling[rep] = numCorrelationClusters++;
       }
@@ -736,7 +783,7 @@ namespace Halite {
     
     correlationClusters.clear();
     correlationClusters.resize(numCorrelationClusters, CorrelationCluster(DIM));
-    
+    std::cout<<"numcorr "<<this->numCorrelationClusters()<<"\n";
     for (size_t i=0; i<numBetaClusters(); i++) {
       BetaCluster<double>& bCluster=classifier.betaClusters[i];
       for (size_t j = 0; j<DIM; j++) {
@@ -749,7 +796,7 @@ namespace Halite {
   }//end haliteClustering::mergeBetaClusters
 
   int haliteClustering::shouldMerge(BetaCluster<double>& iCl,BetaCluster<double>& jCl) {
-
+ 
     // discovers if beta-cluster i shares database space with beta-cluster j
     int shareSpace=1;
     for(size_t k=0; shareSpace && k<DIM; k++) {
@@ -880,7 +927,7 @@ namespace Halite {
     bool belongsTo;
     const double* normalizeSlope = calcTree->getNormalizeSlope();
     const double* normalizeYInc = calcTree->getNormalizeYInc();
-    
+
     std::vector<double> maxCell(DIM, 0.0);
     std::vector<double> minCell(DIM, 0.0);
 

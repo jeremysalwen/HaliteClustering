@@ -25,6 +25,7 @@ class stCell {
 
     *(char*)p = usedCell;   p += sizeof(char);
     *(int*)p = sumOfPoints; p += sizeof(int);
+    memset(p,0,sizeof(stCellId));
     p += sizeof(stCellId);
     *(size_t*)p = P.size(); p += sizeof(size_t);
 
@@ -111,6 +112,17 @@ class stCell {
     id.reset();
   }
 
+  void print(int DIM) {
+    std::cout << (int)usedCell << " "<<sumOfPoints  << "\n";
+      for(size_t i=0; i<DIM; i++) {
+	std::cout <<(int)(id.getBitValue(i, DIM)==0);
+      }
+      std::cout<<"\n";
+      for(size_t i=0; i<P.size(); i++) {
+	std::cout<<P[i];
+      }
+      std::cout<<"\n";
+  }
  public:
 
 
