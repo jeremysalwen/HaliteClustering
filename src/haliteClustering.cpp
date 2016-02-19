@@ -408,21 +408,21 @@ namespace Halite {
 
     //prepare the fullId array
     int nPos = (int) ceil((double)DIM/8);
-    unsigned char *fullId = new unsigned char[(level+1)*nPos];
-    unsigned char *ccFullId = new unsigned char[(level+1)*nPos];
-    memset(fullId,0,(level+1)*nPos);
-    memset(ccFullId,0,(level+1)*nPos);
+
+    std::vector<unsigned char> fullId((level+1)*nPos,0);
+    std::vector<unsigned char> ccFullId((level+1)*nPos,0);
 
     //prepare the cell and the Dbts to receive
     //key/data pairs from the dataset
-    stCellId *id = new stCellId(DIM);
-    unsigned char* serialized = new unsigned char[stCell::size(DIM)];
+
+    std::vector<unsigned char> serialized(stCell::size(DIM));
+
     Dbt searchKey, searchData;
-    searchKey.set_data(fullId);
-    searchKey.set_ulen((level+1)*nPos);
+    searchKey.set_data(fullId.data());
+    searchKey.set_ulen(fullId.size());
     searchKey.set_flags(DB_DBT_USERMEM);
-    searchData.set_data(serialized);
-    searchData.set_ulen(stCell::size(DIM));
+    searchData.set_data(serialized.data());
+    searchData.set_ulen(serialized.size());
     searchData.set_flags(DB_DBT_USERMEM);
 
     // Get a cursor
@@ -440,7 +440,7 @@ namespace Halite {
     // iterate over the database, retrieving each record in turn
     int ret;
     while ((ret = cursorp->get(&searchKey, &searchData, DB_NEXT)) == 0) {
-      stCell cell = stCell::deserialize(serialized);
+      stCell cell = stCell::deserialize(serialized.data());
      
       // Does not analyze cells analyzed before and cells that can't be the biggest convolution center.
       // It speeds up the algorithm, specially when neighbourhoodConvolutionValue <= 0
@@ -448,14 +448,13 @@ namespace Halite {
       if (!( (!cell.getUsedCell()) && ( (neighbourhoodConvolutionValue > 0) ||
 					((cell.getSumOfPoints()*centralConvolutionValue) > biggestConvolutionValue) ||
 					( ((cell.getSumOfPoints()*centralConvolutionValue) == biggestConvolutionValue) &&
-					  (memcmp(fullId, ccFullId, (level+1)*nPos) < 0) ) ) )) {
+					  (memcmp(fullId.data(), ccFullId.data(), fullId.size()) < 0) ) ) )) {
 	continue;
       }
       //set id for cell
-      id->setIndex(fullId+(level*nPos)); //copy from fullId to id
-      cell.setId(id); //copy from id to cell->id
+      cell.id.setIndex(&fullId[level*nPos]);
       //finds the parents of cell
-      calcTree->findParents(fullId,parentsVector,level);
+      calcTree->findParents(fullId.data(),parentsVector,level);
 
       // discovers the position of cell in the data space
       cellPosition(cell,parentsVector,minCell,maxCell,level);
@@ -487,12 +486,13 @@ namespace Halite {
       }//end if
 
       if ( (newConvolutionValue > biggestConvolutionValue) ||
-	   ((newConvolutionValue == biggestConvolutionValue) && (memcmp(fullId, ccFullId, (level+1)*nPos) < 0))) {
+	   ((newConvolutionValue == biggestConvolutionValue) && (memcmp(fullId.data(), ccFullId.data(), fullId.size()) < 0))) {
 
 	// until now, cell is the biggest convolution value, thus, set the new biggest value and copy
 	// cell and its parents to betaClusterCenter and its parents
 	biggestConvolutionValue = newConvolutionValue;
-	memcpy(ccFullId, fullId, (level+1)*nPos);
+	std::copy(fullId.begin(), fullId.end(), ccFullId.begin());
+	
 	betaClusterCenter=cell;
 	for (int j = 0;j<level;j++) {
 	  betaClusterCenterParents[j]=parentsVector[j];
@@ -509,12 +509,6 @@ namespace Halite {
       cursorp->close();
     }
 
-    // disposes the used memoryA
-    delete [] serialized;
-    delete id;
-    delete [] fullId;
-    delete [] ccFullId;
- 
     return 1; //Success
   }//end haliteClustering::walkThroughConvolution
 
