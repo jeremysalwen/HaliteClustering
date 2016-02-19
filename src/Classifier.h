@@ -3,6 +3,7 @@
 #define CLASSIFIER_H
 
 #include <vector>
+#include <cstddef>
 #include "BetaCluster.h"
 namespace Halite {
 
@@ -16,11 +17,11 @@ namespace Halite {
      */
     template<typename Iterator>
       Iterator assignToClusters(const double* point, Iterator out) {
-      for(int i=0; i<betaClusters.size(); i++) {
+      for(size_t i=0; i<betaClusters.size(); i++) {
 	BetaCluster<double>& betaCluster=betaClusters[i];
 	bool belongsTo=true;
 	// undoes the normalization and verify if the current point belongs to the current beta-cluster
-	for (int dim=0; belongsTo && dim<betaCluster.min.size(); dim++) {			       
+	for (size_t dim=0; belongsTo && dim<betaCluster.min.size(); dim++) {			       
 	  if (! (point[dim] >= ((betaCluster.min[dim]*normalizeSlope[dim])+normalizeYInc[dim]) && 
 		 point[dim] <= ((betaCluster.max[dim]*normalizeSlope[dim])+normalizeYInc[dim])) ) {
 	    belongsTo = false; // this point does not belong to the current beta-cluster
