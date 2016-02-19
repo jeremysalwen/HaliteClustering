@@ -109,16 +109,10 @@ namespace Halite {
     calcTree = new stCountingTree(H, dbType, dbDisk,DIM);
     fastDistExponent(data, normalizeFactor);
 
-    // builds vectors to describe the positions of a cluster center in the data space
-    minBetaClusterCenter.resize(DIM, 0.0);
-    maxBetaClusterCenter.resize(DIM, 0.0);
-
+  
     // builds vectors to the parents of a cluster center and of a neighbour
     betaClusterCenterParents.resize(H,stCell(DIM));
     
-    // builds auxiliar vectors used to search for the relevant attributes
-    attributesRelevance = new double[DIM];
-
     // builds auxiliar vector to describe which neighbours belong to a found cluster
     neighbourhood = new char[DIM];
     
@@ -145,16 +139,28 @@ namespace Halite {
 
     // disposes the used structures
     delete [] neighbourhood;
-    delete [] attributesRelevance;
-  
+   
     delete calcTree;
 
   }//end haliteClustering::~haliteClustering
 
   //---------------------------------------------------------------------------
   void haliteClustering::findCorrelationClusters() {
+
+     /**
+     * Vector used when discovering relevant attributes.
+     */
+    std::vector<double> attributesRelevance(DIM);
+
+    /**
+     * Vectors to describe the positions of the beta-cluster center in the data space.
+     */
+    std::vector<double> minBetaClusterCenter(DIM,0.0);
+    std::vector<double> maxBetaClusterCenter(DIM,0.0);
+
     std::vector<size_t> old_center(DIM, 0);
     std::vector<size_t> old_critical(DIM, 0);
+
     // defines when a new cluster is found
     size_t center;
     int ok, total;
@@ -246,7 +252,7 @@ namespace Halite {
 
       // discovers the cThreshold based on the minimum description length method
       const double cThreshold = calcCThreshold(attributesRelevance);
-
+      
       // new cluster found
       classifier.betaClusters.push_back(BetaCluster<double>(level, DIM));
       printf("a beta-cluster was found at the Counting-tree level %d (%zu).\n",level,numBetaClusters()); // prints the level in which a new beta-cluster was found
@@ -271,7 +277,8 @@ namespace Halite {
 	  // looks for the internal neighbour
 	  stCell neighbour;
 	  if (internalNeighbour(i,betaClusterCenter,&neighbour,betaClusterCenterParents,level)) { // internal neighbour in important dimension always belongs to the cluster
-	    // neighbour's position in the data space
+	    //Position of a neighbour of the beta-cluster center in the data space, regarding a dimension e_j.
+	    double minNeighbour, maxNeighbour;
 	    cellPositionDimensionE_j(neighbour,betaClusterCenterParents,&minNeighbour,&maxNeighbour,level,i);
 	    if (maxBetaClusterCenter[i] > maxNeighbour) {
 	      neighbourhood[i]='I'; // inferior neighbour in i belongs to the cluster
@@ -285,7 +292,8 @@ namespace Halite {
 	  
 	  if (externalNeighbour(i,betaClusterCenter,&neighbour,betaClusterCenterParents,neighbourParents,level)) { // analyzes external neighbour to decide if it belongs to the cluster
 	    if (neighbourhood[i] == 'N') {
-	      // neighbour's position in the data space
+	      //Position of a neighbour of the beta-cluster center in the data space, regarding a dimension e_j.
+	      double minNeighbour,maxNeighbour;
 	      cellPositionDimensionE_j(neighbour,neighbourParents,&minNeighbour,&maxNeighbour,level,i);
 	      if (maxBetaClusterCenter[i] > maxNeighbour) {
 		neighbourhood[i]='I'; // inferior neighbour in i belongs to the cluster
@@ -334,22 +342,23 @@ namespace Halite {
   }//end haliteClustering::findCorrelationClusters
 
   //---------------------------------------------------------------------------
-  double haliteClustering::calcCThreshold(double *attributesRelevance) {
+  double haliteClustering::calcCThreshold(const std::vector<double>& attributesRelevance) {
+    std::vector<double> sortedRelevance(DIM);
 
-    double *sortedRelevance = new double[DIM];
     for (size_t i = 0; i < DIM; i++) {
       sortedRelevance[i]=attributesRelevance[i];
     }//end for
-    qsort(sortedRelevance,DIM,sizeof(double),compare); // sorts the relevances vector
+    std::sort(sortedRelevance.begin(), sortedRelevance.end());
+
     double cThreshold = sortedRelevance[minimumDescriptionLength(sortedRelevance)];
-    delete [] sortedRelevance;
+
     return cThreshold;
 
   }//end haliteClustering::calcCThreshold
 
   //---------------------------------------------------------------------------
-  int haliteClustering::minimumDescriptionLength(double *sortedRelevance) {
-
+  int haliteClustering::minimumDescriptionLength(const std::vector<double>& sortedRelevance) {
+    
     int cutPoint=-1;
     double preAverage, postAverage, descriptionLength, minimumDescriptionLength;
     for (size_t i = 0; i < DIM; i++) {

@@ -211,27 +211,9 @@ namespace Halite {
     stCell betaClusterCenter;
 
     /**
-     * Vectors to describe the positions of the beta-cluster center in the data space.
-     */
-    std::vector<double> minBetaClusterCenter;
-    std::vector<double> maxBetaClusterCenter;
-
-    /**
-     * Position of a neighbour of the beta-cluster center in the data space, regarding a dimension e_j.
-     */      
-    double minNeighbour;
-    double maxNeighbour;
-
-    /**
      * Vectors with pointers to the parents of a beta-cluster center and of a neighbour.
      */
     std::vector<stCell> betaClusterCenterParents;
-
-
-    /**
-     * Vectors used when discovering relevant attributes.
-     */
-    double *attributesRelevance;      
 
     /**
      * Vector used to indicate which direct neighbours of a central cell also belong to the beta-cluster.
@@ -273,7 +255,7 @@ namespace Halite {
      * @param attributesRelevance Vector with the calculed relevances of each attribute.
      *
      */
-    double calcCThreshold(double *attributesRelevance);
+    double calcCThreshold(const std::vector<double>& attributesRelevance);
 
     /**
      * Finds the best cut point position based on the MDL method.
@@ -281,7 +263,7 @@ namespace Halite {
      * @param sortedRelevance Vector with the sorted relevances of each attribute.
      *
      */
-    int minimumDescriptionLength(double *sortedRelevance);
+    int minimumDescriptionLength(const std::vector<double>& sortedRelevance);
 
     /**
      * Walk through the counting tree applying the convolution matrix
