@@ -215,11 +215,7 @@ namespace Halite {
      */
     std::vector<stCell> betaClusterCenterParents;
 
-    /**
-     * Vector used to indicate which direct neighbours of a central cell also belong to the beta-cluster.
-     */
-    char *neighbourhood;
-
+  
     /**
      * Defines the convolution matrix (center and direct neighbours).
      */

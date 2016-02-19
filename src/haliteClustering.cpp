@@ -113,9 +113,6 @@ namespace Halite {
     // builds vectors to the parents of a cluster center and of a neighbour
     betaClusterCenterParents.resize(H,stCell(DIM));
     
-    // builds auxiliar vector to describe which neighbours belong to a found cluster
-    neighbourhood = new char[DIM];
-    
     // stores the convolution matrix (center and direct neighbours)
     this->centralConvolutionValue=centralConvolutionValue;
     this->neighbourhoodConvolutionValue=neighbourhoodConvolutionValue;
@@ -138,8 +135,6 @@ namespace Halite {
   haliteClustering::~haliteClustering() {
 
     // disposes the used structures
-    delete [] neighbourhood;
-   
     delete calcTree;
 
   }//end haliteClustering::~haliteClustering
@@ -158,6 +153,9 @@ namespace Halite {
     std::vector<double> minBetaClusterCenter(DIM,0.0);
     std::vector<double> maxBetaClusterCenter(DIM,0.0);
 
+    // Vector used to indicate which direct neighbours of a central cell also belong to the beta-cluster.
+    std::vector<char> neighbourhood(DIM);
+    
     std::vector<size_t> old_center(DIM, 0);
     std::vector<size_t> old_critical(DIM, 0);
 
