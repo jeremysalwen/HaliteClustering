@@ -83,7 +83,7 @@
 
 namespace Halite {
 
-  size_t haliteClustering::getCenter(size_t level) {
+  /* size_t haliteClustering::getCenter(size_t level) {
     size_t center;
 
     //if (betaClusterCenter.getId()->getBitValue(0,DIM)) {
@@ -92,7 +92,7 @@ namespace Halite {
     center = betaClusterCenterParents[level-1].getP(0);
     //}
     return center;
-  }
+    }*/
 
   haliteClustering::haliteClustering (PointSource& data, int normalizeFactor, int centralConvolutionValue,
 				      int neighbourhoodConvolutionValue, double pThreshold, int H, int hardClustering,
@@ -110,8 +110,6 @@ namespace Halite {
     fastDistExponent(data, normalizeFactor);
 
   
-    // builds vectors to the parents of a cluster center and of a neighbour
-    betaClusterCenterParents.resize(H,stCell(DIM));
     
     // stores the convolution matrix (center and direct neighbours)
     this->centralConvolutionValue=centralConvolutionValue;
@@ -126,9 +124,6 @@ namespace Halite {
     classifier.normalizeYInc=calcTree->getNormalizeYInc();
     
  
-    //create memory space for betaClusterCenter
-        betaClusterCenter = stCell(DIM);
-
   }//end haliteClustering::haliteClustering
 
   //---------------------------------------------------------------------------
@@ -156,9 +151,15 @@ namespace Halite {
     // Vector used to indicate which direct neighbours of a central cell also belong to the beta-cluster.
     std::vector<char> neighbourhood(DIM);
     
+    // Pointers to the central cell of a found beta-cluster and to a neighbour cell.
+    stCell betaClusterCenter(DIM);
+    // Vectors with pointers to the parents of a beta-cluster center and of a neighbour.
+    std::vector<stCell> betaClusterCenterParents(H,stCell(DIM));
+
     std::vector<size_t> old_center(DIM, 0);
     std::vector<size_t> old_critical(DIM, 0);
 
+   
     // defines when a new cluster is found
     size_t center;
     int ok, total;
@@ -169,7 +170,7 @@ namespace Halite {
       do { // analyzes each level until a new cluster is found
 	// apply the convolution matrix to each grid cell in the current level
 	// finds the cell with the bigest convolution value
-	if (walkThroughConvolution(level)) {
+	if (walkThroughConvolution(level,betaClusterCenter, betaClusterCenterParents)) {
 	  betaClusterCenter.useCell(); // visited cell
 	  calcTree->commitCell(betaClusterCenterParents, &betaClusterCenter, level); // commit changes in the tree
 	  if (level) {
@@ -396,7 +397,7 @@ namespace Halite {
   }//end haliteClustering::minimumDescriptionLength
 
   //---------------------------------------------------------------------------
-  int haliteClustering::walkThroughConvolution(int level) {
+  int haliteClustering::walkThroughConvolution(int level, stCell& betaClusterCenter, std::vector<stCell>& betaClusterCenterParents) {
     //try to get the db in the current level
     Db *db = calcTree->getDb(level);
     if (!db)

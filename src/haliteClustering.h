@@ -206,17 +206,6 @@ namespace Halite {
     int initialLevel;
 
     /**
-     * Pointers to the central cell of a found beta-cluster and to a neighbour cell.
-     */
-    stCell betaClusterCenter;
-
-    /**
-     * Vectors with pointers to the parents of a beta-cluster center and of a neighbour.
-     */
-    std::vector<stCell> betaClusterCenterParents;
-
-  
-    /**
      * Defines the convolution matrix (center and direct neighbours).
      */
     int centralConvolutionValue;
@@ -226,7 +215,6 @@ namespace Halite {
      * Defines the threshold used to spot a beta-cluster, based on the binomial probability.
      */
     double pThreshold;
-
 
     Classifier<double> classifier;
     std::vector<CorrelationCluster> correlationClusters;
@@ -268,7 +256,7 @@ namespace Halite {
      * @param level The counting tree level to be analyzed.
      *
      */
-    int walkThroughConvolution(int level);
+    int walkThroughConvolution(int level, stCell& betaClusterCenter, std::vector<stCell>& betaClusterCenterParents);
 
     /**
      * Applies the convolution matrix to a grid cell.
