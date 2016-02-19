@@ -83,8 +83,6 @@
 
 using namespace Halite;
 
-#define INPUT "databases/12d.dat" //input data path
-#define OUTPUT "results/result12d.dat" //output path
 
 // default values
 #define NORMALIZE_FACTOR 0 // Independent
@@ -118,8 +116,8 @@ int main(int argc, char **argv) {
 	initClock(); // initiates the meassurement of run time
 	
 	// first validations
-	if (argc != 6) {
-		printf("Usage: Halite <pThreshold> <H> <hardClustering> <initialLevel> <memoryMode>\n");
+	if (argc != 8) {
+		printf("Usage: Halite <pThreshold> <H> <hardClustering> <initialLevel> <memoryMode> <infile> <outfile>\n");
 		return 1; //error
 	}//end if
 	
@@ -136,7 +134,7 @@ int main(int argc, char **argv) {
 
 	// opens/creates the used files
 	FILE  *result;
-	result=fopen(OUTPUT, "w");
+	result=fopen(argv[7], "w");
 	if (!result) {
 		printf("Halite could not create the result file.\n");
 		return 1; //error
@@ -144,7 +142,7 @@ int main(int argc, char **argv) {
 
 	PointSource*  db;
 	try {
-		db=new TextFilePointSource(INPUT);
+		db=new TextFilePointSource(argv[6]);
 	} catch(std::exception& e) {
 	  std::cout<<e.what()<<"\n";
 		printf("'Halite could not open database file.\n");

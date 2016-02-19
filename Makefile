@@ -9,7 +9,7 @@ Halite: $(OBJ)
 	$(CXX) $(OBJ) $(LDFLAGS) -o Halite
 
 demo:   Halite
-	./Halite 1e-10 4 1 1 0
+	./Halite 1e-10 4 1 1 0 databases/12d.dat results/result12.dat
 
 clean:
 	rm -f ./results/result12d.dat
