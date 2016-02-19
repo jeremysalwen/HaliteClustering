@@ -355,6 +355,11 @@ namespace Halite {
 
   }//end haliteClustering::calcCThreshold
 
+  //For positive numbers only
+  inline double log2ceil(double d) {
+    double cl = ceil(d);
+    return cl ? log2(cl) : 0;
+  }
   //---------------------------------------------------------------------------
   int haliteClustering::minimumDescriptionLength(const std::vector<double>& sortedRelevance) {
     
@@ -369,7 +374,7 @@ namespace Halite {
       }//end for
       if (i) {
 	preAverage/=i;
-	descriptionLength += (ceil(preAverage)) ? (log10(ceil(preAverage))/log10((double)2)) : 0;	// changes the log base from 10 to 2
+	descriptionLength += log2ceil(preAverage);	
       }//end if
       postAverage=0;
       for (size_t j = i;j<DIM;j++) {
@@ -377,14 +382,14 @@ namespace Halite {
       }//end for
       if (DIM-i) {
 	postAverage/=(DIM-i);
-	descriptionLength += (ceil(postAverage)) ? (log10(ceil(postAverage))/log10((double)2)) : 0;	// changes the log base from 10 to 2
+	descriptionLength += log2ceil(postAverage);
       }//end if
       // calculates the description length
       for (size_t j = 0;j<i;j++) {
-	descriptionLength += (ceil(fabs(preAverage-sortedRelevance[j]))) ? (log10(ceil(fabs(preAverage-sortedRelevance[j])))/log10((double)2)) : 0;	// changes the log base from 10 to 2
+	descriptionLength += log2ceil(fabs(preAverage-sortedRelevance[j]));
       }//end for
       for (size_t j = i;j<DIM;j++) {
-	descriptionLength += (ceil(fabs(postAverage-sortedRelevance[j]))) ? (log10(ceil(fabs(postAverage-sortedRelevance[j])))/log10((double)2)) : 0;	// changes the log base from 10 to 2
+	descriptionLength += log2ceil(fabs(postAverage-sortedRelevance[j]));
       }//end for
       // verify if this is the best cut point
       if (cutPoint==-1 || descriptionLength < minimumDescriptionLength) {
@@ -628,14 +633,15 @@ namespace Halite {
   void haliteClustering::fastDistExponent(PointSource& data, int normalizeFactor) {
 
     double *minD, *maxD, biggest;
-    double *resultPoint, *a, *b; // y=Ax+B to normalize each dataset.
+
     double normalizationFactor = 1.0;
 
     minD = (double *) calloc ((1+DIM),sizeof(double));
     maxD = (double *) calloc ((1+DIM),sizeof(double));
-    a = (double *) calloc(DIM,sizeof(double));
-    b = (double *) calloc(DIM,sizeof(double));
-    resultPoint = (double *) calloc(DIM,sizeof(double));
+    std::vector<double> a(DIM,0.0); //y=Ax+B to normalize each dataset
+    std::vector<double> b(DIM,0.0);
+
+    std::vector<double> resultPoint(DIM,0.0);
 
     // normalizes the data
     minMax(data, minD, maxD);
@@ -680,14 +686,11 @@ namespace Halite {
     //process each point
     for (data.restartIteration(); data.hasNext();) {
       const double* onePoint= data.readPoint();
-      calcTree->insertPoint(onePoint,resultPoint); //add to the grid structure
+      calcTree->insertPoint(onePoint,resultPoint.data()); //add to the grid structure
       this->SIZE++;
     }//end for
 
     // disposes used memory
-    free(resultPoint);
-    free(a);
-    free(b);
     free(minD);
     free(maxD);
 
@@ -849,7 +852,7 @@ namespace Halite {
     if (n <= 1) {
       return 1; // zero and one cost one
     }
-    return (int) ceil(log(n)/log((double) 2)); // cost of n, when n > 1
+    return (int) ceil(log2(n)); // cost of n, when n > 1
   }
 
   cv::Mat haliteClustering::inputPCA(const BetaCluster<double>* iCl, const BetaCluster<double>* jCl) {
