@@ -190,7 +190,7 @@ int main(int argc, char **argv) {
 	  fputs("ClusterResult",result);
 	  fprintf(result,"%d",i+1);	
 	  for (unsigned int j=0; j<DIM; j++) {
-	    (correlationCluster.relevantDimension[j]) ? fputs(" 1",result) : fputs(" 0",result);
+	    fputs(correlationCluster.relevantDimension[j] ? " 1" : " 0",result);
 	  }//end for
 	  fputs("\n",result); // writes the relevant axes to the current cluster in the result file
 	}//end for
