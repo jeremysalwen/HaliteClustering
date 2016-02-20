@@ -88,9 +88,7 @@
 #include <time.h>
 
 namespace Halite {
-  enum DataNormalization {
-    Independent =0, MaintainProportion, Clip, GeoReferenced
-  };
+
   //----------------------------------------------------------------------------
   // class haliteClustering
   //----------------------------------------------------------------------------
@@ -121,7 +119,7 @@ namespace Halite {
      *
      */
     haliteClustering (PointSource& data,
-		      DataNormalization normalizeFactor,
+		      Normalization::Mode normalizationMode,
 		      int centralConvolutionValue, int neighbourhoodConvolutionValue,
 		      double pThreshold, int H, int hardClustering, int initialLevel, DBTYPE dbType, bool dbDisk);
 
@@ -139,7 +137,7 @@ namespace Halite {
      * Gets the number of beta-clusters found.
      */
     size_t numBetaClusters() {
-      return classifier.betaClusters.size();
+      return classifier->betaClusters.size();
     }
 
     /**
@@ -149,7 +147,7 @@ namespace Halite {
       return correlationClusters.size();
     }
 
-    Classifier<double>& getClassifier() {
+    std::shared_ptr<Classifier<double>> getClassifier() {
       return classifier;
     }
 
@@ -219,7 +217,8 @@ namespace Halite {
      */
     double pThreshold;
 
-    Classifier<double> classifier;
+    shared_ptr<Normalization> normalization;
+    shared_ptr<Classifier<double> > classifier;
     std::vector<CorrelationCluster> correlationClusters;
 
 
@@ -353,22 +352,12 @@ namespace Halite {
      * Method from the stFractalDimension class (adapted).
      *
      * @param PointSource Source of the database objects.
-     * @param normalizeFactor Determines how data will be normalized.
+     * @param Normalization::Mode Determines how data will be normalized.
      *
      */
-    void fastDistExponent(PointSource& data, DataNormalization dataNormalization);
+    void readData(PointSource& data, Normalization::Mode mode);
 
-    /**
-     * Finds the minimum and maximum data values in each dimension.
-     * Method from the stFractalDimension class (adapted).
-     *
-     * @param PointSource Source of the database objects.
-     * @param min Vector to receive the minimum data value in each dimension.
-     * @param max Vector to receive the maximum data value in each dimension.
-     *
-     */
-    void minMax(PointSource& data, std::vector<double>& min, std::vector<double>& max);
-
+ 
     size_t getCenter(size_t level);
 
   };//end haliteClustering

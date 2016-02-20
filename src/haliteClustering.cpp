@@ -94,7 +94,7 @@ namespace Halite {
     return center;
     }*/
 
-  haliteClustering::haliteClustering (PointSource& data, DataNormalization normalizeFactor, int centralConvolutionValue,
+  haliteClustering::haliteClustering (PointSource& data, Normalization::Mode normalizationMode, int centralConvolutionValue,
 				      int neighbourhoodConvolutionValue, double pThreshold, int H, int hardClustering,
 				      int initialLevel, DBTYPE dbType, bool dbDisk) {
     
@@ -105,10 +105,6 @@ namespace Halite {
     this->hardClustering = hardClustering;
     this->initialLevel = initialLevel;
 
-    // builds the counting tree and inserts objects on it
-    calcTree = new stCountingTree(H, dbType, dbDisk,DIM);
-    fastDistExponent(data, normalizeFactor);
-
     // stores the convolution matrix (center and direct neighbours)
     this->centralConvolutionValue=centralConvolutionValue;
     this->neighbourhoodConvolutionValue=neighbourhoodConvolutionValue;
@@ -116,12 +112,16 @@ namespace Halite {
     // stores the pThreshold
     this->pThreshold = pThreshold;
 
-    // builds pointers to describe the found clusters
-    correlationClusters.clear();
-    classifier.normalizeSlope=calcTree->getNormalizeSlope();
-    classifier.normalizeYInc=calcTree->getNormalizeYInc();
+    classifier=std::make_shared<Classifier<double> >();
+    classifier->hardClustering=hardClustering;
     
- 
+    // builds the counting tree and inserts objects on it
+    calcTree = new stCountingTree(H, dbType, dbDisk,DIM);
+        
+    timeNormalization = clock(); //start normalization time
+    readData(data, normalizationMode);
+    timeNormalization = (clock()-timeNormalization); //total time spent in the normalization
+    
   }//end haliteClustering::haliteClustering
 
   //---------------------------------------------------------------------------
@@ -251,10 +251,10 @@ namespace Halite {
       const double cThreshold = calcCThreshold(attributesRelevance);
       
       // new cluster found
-      classifier.betaClusters.push_back(BetaCluster<double>(level, DIM));
+      classifier->betaClusters.push_back(BetaCluster<double>(level, DIM));
       printf("a beta-cluster was found at the Counting-tree level %d (%zu).\n",level,numBetaClusters()); // prints the level in which a new beta-cluster was found
 
-      BetaCluster<double>& newCluster=classifier.betaClusters.back();
+      BetaCluster<double>& newCluster=classifier->betaClusters.back();
 
       // important dimensions
       for (size_t i = 0; i < DIM; i++) {
@@ -464,7 +464,7 @@ namespace Halite {
 
       // verifies if this cell belongs to a cluster found before
       clusterFoundBefore=0;
-      for (BetaCluster<double>& bCluster: classifier.betaClusters) {
+      for (BetaCluster<double>& bCluster: classifier->betaClusters) {
 	clusterFoundBefore = 1;
 	for (size_t j = 0; j<DIM; j++) {
 	  // Does not cut off cells in a level upper than the level where a cluster was found
@@ -628,84 +628,25 @@ namespace Halite {
   }//end haliteClustering::internalNeighbour
 
   //---------------------------------------------------------------------------
-  void haliteClustering::fastDistExponent(PointSource& data, DataNormalization dataNormalization) {
+  void haliteClustering::readData(PointSource& data, Normalization::Mode mode) {
+    normalization=std::make_shared<Normalization>(data,mode);
+    calcTree->setNormalization(normalization);
+    classifier->normalization=normalization;
 
-    std::vector<double> minD(DIM,0.0);
-    std::vector<double> maxD(DIM,0.0);
-
-    double normalizationFactor = 1.0;
-
-    std::vector<double> a(DIM,0.0); //y=Ax+B to normalize each dataset
-    std::vector<double> b(DIM,0.0);
-
-    std::vector<double> resultPoint(DIM,0.0);
-
-    // normalizes the data
-    minMax(data, minD, maxD);
-
-    // normalize=0->Independent, =1->mantain proportion, =2->Clip
-    //          =3->Geo Referenced
-
-    for (size_t i = 0; i < DIM; i++) {
-      a[i] = (maxD[i] - minD[i]) * normalizationFactor; //a takes the range of each dimension
-      b[i] = minD[i];
-      if (a[i] == 0) {
-	a[i] = 1;
-      }//end if
-    }//end for
-
-    
-    if (dataNormalization != Independent) {
-      double uniformRange;
-      if(dataNormalization==MaintainProportion || dataNormalization == GeoReferenced) {
-	uniformRange=*std::max_element(a.begin(), a.end());
-      } else if(dataNormalization==Clip){
-	uniformRange=*std::min_element(a.begin(), a.end());
-      }
-
-      a.assign(a.size(),uniformRange);
-	/* when we have the proportional normalization, every A[i] are gonna receive
-	   the biggest range.*/
-    }//end if
-
-    calcTree->setNormalizationVectors(a.data(),b.data()); // if there is some normalization
-
+    std::vector<double> tmp(DIM);
     //We also calculate the number of data points here
     this->SIZE=0;
     //process each point
     for (data.restartIteration(); data.hasNext();) {
       const double* onePoint= data.readPoint();
-      calcTree->insertPoint(onePoint,resultPoint.data()); //add to the grid structure
+      calcTree->insertPoint(onePoint,tmp.data()); //add to the grid structure
       this->SIZE++;
     }//end for
 
+
   }//end haliteClustering::FastDistExponent
 
-  //---------------------------------------------------------------------------
-  void haliteClustering::minMax(PointSource& data, std::vector<double>& min, std::vector<double>& max) {
-
-    timeNormalization = clock(); //start normalization time
-    for (size_t j = 0; j<DIM; j++){ // sets the values to the minimum/maximum possible here
-      min[j] = MAXDOUBLE;
-      max[j] = -MAXDOUBLE;
-    }// end for
-    // looking for the minimum and maximum values
-    for (data.restartIteration(); data.hasNext();) {
-      const double* onePoint=data.readPoint();
-      for (size_t j = 0; j<DIM; j++) {
-	if (onePoint[j] < min[j]) {
-	  min[j] = onePoint[j];
-	}//end if
-	if (onePoint[j] > max[j]) {
-	  max[j] = onePoint[j];
-	}//end if
-      }//end for
-    }//end for
-    timeNormalization = (clock()-timeNormalization); //total time spent in the normalization
-
-  }//end haliteClustering::MinMax
-
-  //---------------------------------------------------------------------------
+ 
   void haliteClustering::mergeBetaClusters() {
     std::vector<size_t> rank(numBetaClusters());
     std::vector<size_t> parent(numBetaClusters());
@@ -715,9 +656,9 @@ namespace Halite {
       ds.make_set(i);
     }
     for(size_t i=0; i<numBetaClusters(); i++) {
-      BetaCluster<double>& iCl=classifier.betaClusters[i];
+      BetaCluster<double>& iCl=classifier->betaClusters[i];
       for(size_t j=i+1; j<numBetaClusters(); j++) {
-	BetaCluster<double>& jCl=classifier.betaClusters[j];
+	BetaCluster<double>& jCl=classifier->betaClusters[j];
 	if(shouldMerge(iCl,jCl)) {
 	  ds.union_set(i,j);
 	}
@@ -730,14 +671,14 @@ namespace Halite {
       if(relabeling[rep] == -1) {
 	relabeling[rep] = numCorrelationClusters++;
       }
-      classifier.betaClusters[i].correlationCluster = relabeling[rep];
+      classifier->betaClusters[i].correlationCluster = relabeling[rep];
     }
     
     correlationClusters.clear();
     correlationClusters.resize(numCorrelationClusters, CorrelationCluster(DIM));
 
     for (size_t i=0; i<numBetaClusters(); i++) {
-      BetaCluster<double>& bCluster=classifier.betaClusters[i];
+      BetaCluster<double>& bCluster=classifier->betaClusters[i];
       for (size_t j = 0; j<DIM; j++) {
 	CorrelationCluster& correlationCluster = correlationClusters[bCluster.correlationCluster];
 
@@ -877,9 +818,7 @@ namespace Halite {
 
     //prepare to walk through the level
     bool belongsTo;
-    const double* normalizeSlope = calcTree->getNormalizeSlope();
-    const double* normalizeYInc = calcTree->getNormalizeYInc();
-
+ 
     std::vector<double> maxCell(DIM, 0.0);
     std::vector<double> minCell(DIM, 0.0);
 
@@ -911,10 +850,7 @@ namespace Halite {
       if (belongsTo) { // this cell belongs to the PCA input
 	for (int p=0; p < cell.getSumOfPoints(); p++) {
 	  cluster.emplace_back(DIM);
-	  std::vector<double>& back=cluster.back();
-	  for (size_t dim=0; dim<DIM; dim++) {
-	    back[dim] = cellCenter[dim]*normalizeSlope[dim] + normalizeYInc[dim];
-	  }
+	  normalization->denormalize(cellCenter.begin(), cluster.back().begin());
 	}
       }
 

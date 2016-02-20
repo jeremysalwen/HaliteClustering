@@ -163,7 +163,7 @@ int main(int argc, char **argv) {
 	}
 
 	// creates an object of the class haliteClustering
-	haliteClustering *sCluster = new haliteClustering(*datasource, DataNormalization::Independent, (2*DIM), -1, atof(argv[1]), atoi(argv[2]), atoi(argv[3]), atoi(argv[4]), dbType, (memory & 2));		
+	haliteClustering *sCluster = new haliteClustering(*datasource, Normalization::Independent, (2*DIM), -1, atof(argv[1]), atoi(argv[2]), atoi(argv[3]), atoi(argv[4]), dbType, (memory & 2));		
 	
 	printf("The tree was built.\n");
 	printElapsed(); // prints the elapsed time
@@ -182,7 +182,7 @@ int main(int argc, char **argv) {
 
 	unsigned int numCorrelationClusters=sCluster->numCorrelationClusters();
 
-	Classifier<double>& classifier=sCluster->getClassifier();
+	shared_ptr<Classifier<double>> classifier=sCluster->getClassifier();
 	std::vector<CorrelationCluster>& correlationClusters=sCluster->getCorrelationClusters();
 	// axes relevant to the found clusters
 	for (unsigned int i=0; i<numCorrelationClusters; i++) {
@@ -203,7 +203,7 @@ int main(int argc, char **argv) {
 	for (datasource->restartIteration(); datasource->hasNext(); point++) {
 		onePoint=datasource->readPoint();
 		std::vector<int> clusters;
-		classifier.assignToClusters(onePoint,std::back_inserter(clusters));
+		classifier->assignToClusters(onePoint,std::back_inserter(clusters));
 		for(unsigned int i=0; i<clusters.size(); i++) {
 			fprintf(result, "%d %d\n", point+1, clusters[i]);
 		}

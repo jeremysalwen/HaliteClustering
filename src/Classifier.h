@@ -4,7 +4,10 @@
 
 #include <vector>
 #include <cstddef>
+#include <memory>
 #include "BetaCluster.h"
+#include "Normalization.h"
+
 namespace Halite {
 
   template <typename D>
@@ -20,10 +23,15 @@ namespace Halite {
       for(size_t i=0; i<betaClusters.size(); i++) {
 	BetaCluster<double>& betaCluster=betaClusters[i];
 	bool belongsTo=true;
+	std::vector<D> denormMin(betaCluster.min.size());
+	std::vector<D> denormMax(betaCluster.max.size());
+	normalization->denormalize(betaCluster.min.begin(), denormMin.begin());
+	normalization->denormalize(betaCluster.max.begin(), denormMax.begin());
+	
 	// undoes the normalization and verify if the current point belongs to the current beta-cluster
 	for (size_t dim=0; belongsTo && dim<betaCluster.min.size(); dim++) {			       
-	  if (! (point[dim] >= ((betaCluster.min[dim]*normalizeSlope[dim])+normalizeYInc[dim]) && 
-		 point[dim] <= ((betaCluster.max[dim]*normalizeSlope[dim])+normalizeYInc[dim])) ) {
+	  if (! (point[dim] >= denormMin[dim] && 
+		 point[dim] <= denormMax[dim]) ) {
 	    belongsTo = false; // this point does not belong to the current beta-cluster
 	  }
 	}
@@ -40,8 +48,7 @@ namespace Halite {
     
     bool hardClustering;
 
-    const double* normalizeSlope;
-    const double* normalizeYInc;
+    std::shared_ptr<Normalization> normalization;
 
     std::vector<BetaCluster<D> > betaClusters;
   };
