@@ -2,7 +2,7 @@ CXX := g++
 SRC := $(wildcard src/*.cpp) $(wildcard src/arboretum/*.cpp) 
 OBJ := $(SRC:.cpp=.o)
 
-CXXFLAGS := `pkg-config --cflags opencv` -Wall -Wextra -std=c++11 -g -pedantic
+CXXFLAGS := -Isrc `pkg-config --cflags opencv` -Wall -Wextra -std=c++11 -g -pedantic
 LDFLAGS := -ldb_cxx -lboost_system -lboost_filesystem  `pkg-config --libs opencv` -g
 
 Halite: $(OBJ)
@@ -12,7 +12,7 @@ demo:   Halite
 	./Halite 1e-10 4 1 1 0 databases/12d.dat results/result12.dat
 
 clean:
-	rm -f ./results/result12d.dat
+	rm $(OBJ)
 
 spotless: clean
 	rm -f Halite
