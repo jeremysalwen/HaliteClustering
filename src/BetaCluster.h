@@ -3,7 +3,7 @@
 #define BETA_CLUSTER_H
 
 #include <vector>
-
+#include <cstddef>
 namespace Halite {
   template <typename D>
     class BetaCluster {
