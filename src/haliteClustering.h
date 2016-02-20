@@ -88,6 +88,9 @@
 #include <time.h>
 
 namespace Halite {
+  enum DataNormalization {
+    Independent =0, MaintainProportion, Clip, GeoReferenced
+  };
   //----------------------------------------------------------------------------
   // class haliteClustering
   //----------------------------------------------------------------------------
@@ -118,7 +121,7 @@ namespace Halite {
      *
      */
     haliteClustering (PointSource& data,
-		      int normalizeFactor,
+		      DataNormalization normalizeFactor,
 		      int centralConvolutionValue, int neighbourhoodConvolutionValue,
 		      double pThreshold, int H, int hardClustering, int initialLevel, DBTYPE dbType, bool dbDisk);
 
@@ -353,7 +356,7 @@ namespace Halite {
      * @param normalizeFactor Determines how data will be normalized.
      *
      */
-    void fastDistExponent(PointSource& data, int normalizeFactor);
+    void fastDistExponent(PointSource& data, DataNormalization dataNormalization);
 
     /**
      * Finds the minimum and maximum data values in each dimension.
@@ -364,7 +367,7 @@ namespace Halite {
      * @param max Vector to receive the maximum data value in each dimension.
      *
      */
-    void minMax(PointSource& data, double *min, double *max);
+    void minMax(PointSource& data, std::vector<double>& min, std::vector<double>& max);
 
     size_t getCenter(size_t level);
 

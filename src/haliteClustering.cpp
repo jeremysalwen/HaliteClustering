@@ -94,10 +94,10 @@ namespace Halite {
     return center;
     }*/
 
-  haliteClustering::haliteClustering (PointSource& data, int normalizeFactor, int centralConvolutionValue,
+  haliteClustering::haliteClustering (PointSource& data, DataNormalization normalizeFactor, int centralConvolutionValue,
 				      int neighbourhoodConvolutionValue, double pThreshold, int H, int hardClustering,
 				      int initialLevel, DBTYPE dbType, bool dbDisk) {
-
+    
     // stores DIM, H, hardClustering and initialLevel
 
     this->DIM=data.dimension();
@@ -109,8 +109,6 @@ namespace Halite {
     calcTree = new stCountingTree(H, dbType, dbDisk,DIM);
     fastDistExponent(data, normalizeFactor);
 
-  
-    
     // stores the convolution matrix (center and direct neighbours)
     this->centralConvolutionValue=centralConvolutionValue;
     this->neighbourhoodConvolutionValue=neighbourhoodConvolutionValue;
@@ -630,14 +628,13 @@ namespace Halite {
   }//end haliteClustering::internalNeighbour
 
   //---------------------------------------------------------------------------
-  void haliteClustering::fastDistExponent(PointSource& data, int normalizeFactor) {
+  void haliteClustering::fastDistExponent(PointSource& data, DataNormalization dataNormalization) {
 
-    double *minD, *maxD, biggest;
+    std::vector<double> minD(DIM,0.0);
+    std::vector<double> maxD(DIM,0.0);
 
     double normalizationFactor = 1.0;
 
-    minD = (double *) calloc ((1+DIM),sizeof(double));
-    maxD = (double *) calloc ((1+DIM),sizeof(double));
     std::vector<double> a(DIM,0.0); //y=Ax+B to normalize each dataset
     std::vector<double> b(DIM,0.0);
 
@@ -645,12 +642,9 @@ namespace Halite {
 
     // normalizes the data
     minMax(data, minD, maxD);
-    biggest = 0; // for Normalize==0, 1 or 3
+
     // normalize=0->Independent, =1->mantain proportion, =2->Clip
     //          =3->Geo Referenced
-    if (normalizeFactor == 2) {
-      biggest = MAXDOUBLE;
-    }//end if
 
     for (size_t i = 0; i < DIM; i++) {
       a[i] = (maxD[i] - minD[i]) * normalizationFactor; //a takes the range of each dimension
@@ -660,26 +654,21 @@ namespace Halite {
       }//end if
     }//end for
 
-    for (size_t i = 0; i < DIM; i++) {
-      if ((normalizeFactor < 2 || normalizeFactor == 3) && biggest < a[i]) {
-	biggest = a[i];
-      }//end if
-      if (normalizeFactor == 2 && biggest > a[i]) {
-	biggest = a[i];
-      }//end if
-    }//end for
+    
+    if (dataNormalization != Independent) {
+      double uniformRange;
+      if(dataNormalization==MaintainProportion || dataNormalization == GeoReferenced) {
+	uniformRange=*std::max_element(a.begin(), a.end());
+      } else if(dataNormalization==Clip){
+	uniformRange=*std::min_element(a.begin(), a.end());
+      }
 
-    if (normalizeFactor != 0) {
-      for (size_t i = 0; i < DIM; i++) {
-	a[i] = biggest; // normalized keeping proportion
-      }//end for
-      /* when we have the proportional normalization, every A[i] are gonna receive
-	 the biggest range.*/
+      a.assign(a.size(),uniformRange);
+	/* when we have the proportional normalization, every A[i] are gonna receive
+	   the biggest range.*/
     }//end if
 
-    if (normalizeFactor >= 0) {
-      calcTree->setNormalizationVectors(a,b); // if there is some normalization
-    }//end if
+    calcTree->setNormalizationVectors(a.data(),b.data()); // if there is some normalization
 
     //We also calculate the number of data points here
     this->SIZE=0;
@@ -690,14 +679,10 @@ namespace Halite {
       this->SIZE++;
     }//end for
 
-    // disposes used memory
-    free(minD);
-    free(maxD);
-
   }//end haliteClustering::FastDistExponent
 
   //---------------------------------------------------------------------------
-  void haliteClustering::minMax(PointSource& data, double *min, double *max) {
+  void haliteClustering::minMax(PointSource& data, std::vector<double>& min, std::vector<double>& max) {
 
     timeNormalization = clock(); //start normalization time
     for (size_t j = 0; j<DIM; j++){ // sets the values to the minimum/maximum possible here
