@@ -1,14 +1,20 @@
 Halite - basic information
 
-Halite is an algorithm (and a library) for scalable clustering of high-dimensional data. For more information, see the paper "Halite: Fast and Scalable Multiresolution Local-Correlation Clustering" by Robson L. F. Cordeiro, Agma J. M. Traina, Christos Faloutsos and Caetano Traina Jr.
+Halite is an algorithm (and a library) for scalable clustering of 
+high-dimensional data. For more information, see the paper "Halite: Fast 
+and Scalable Multiresolution Local-Correlation Clustering" by Robson L. 
+F. Cordeiro, Agma J. M. Traina, Christos Faloutsos and Caetano Traina 
+Jr.
 
-Included is the C++ API for the algorithm (haliteClustering.cpp), as well as a demo program (Halite.cpp). 
+Included is the C++ API for the algorithm (HaliteClustering.cpp), as 
+well as a demo program (Halite.cpp).
 
-If you want to use the code, the easiest way would just be copying the source files into your project, as it's not set up to build or install a library.
+If you want to use the code, the easiest way would just be copying the 
+source files into your project, as it's not set up to build or install a 
+library.
 
 *******************************************************************
-
-input data format:
+Demo program input data format:
  
 axis_1 axis_2 axis_3 ... axis_d groundTruthCluster
 axis_1 axis_2 axis_3 ... axis_d groundTruthCluster
@@ -50,9 +56,10 @@ Example: results\result12d.dat
 *******************************************************************
 compiling Halite:
 
-First, you must install two third-part software:
+First, you must install the required libraries:
    - Oracle Berkeley DB: "http://www.oracle.com/technetwork/database/berkeleydb/overview/index.html"
    - OpenCV: "http://opencv.willowgarage.com/"
+   - Boost: "htpp://boost.org" (filesystem, disjoint_set, format)
 
 Then, compile the code using any standard c++ compiler using make.
 
@@ -60,9 +67,9 @@ Then, compile the code using any standard c++ compiler using make.
 
 running Halite:
 
-Halite \alpha H hardClustering initialLevel dim memoryMode
+Halite \alpha H hardClustering initialLevel dim memoryMode inputFile outputFile
 
-Obs.: - the input/output specs are defined in "arboretum/ioSpecs.h".
+Obs.: 
       - the default value for \alpha is 1e-10.
       - the default value for H is 4.
       - hardClustering = 1 means that the result will be a dataset partition (one point belongs to at most one cluster).

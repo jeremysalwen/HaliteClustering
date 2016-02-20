@@ -60,7 +60,7 @@
  */
 /**
  * @file
- * This file implements the class haliteClustering.
+ * This file implements the class HaliteClustering.
  *
  * @version 1.0
  * @author Robson Leonardo Ferreira Cordeiro (robson@icmc.usp.br)
@@ -71,10 +71,10 @@
 // Copyright (c) 2002-2009 GBDI-ICMC-USP
 
 //------------------------------------------------------------------------------
-// class haliteClustering
+// class HaliteClustering
 //------------------------------------------------------------------------------
 
-#include "haliteClustering.h"
+#include "HaliteClustering.h"
 #include <vector>
 #include <memory>
 #include <boost/pending/disjoint_sets.hpp>
@@ -83,7 +83,7 @@
 
 namespace Halite {
 
-  /* size_t haliteClustering::getCenter(size_t level) {
+  /* size_t HaliteClustering::getCenter(size_t level) {
     size_t center;
 
     //if (betaClusterCenter.getId()->getBitValue(0,DIM)) {
@@ -94,7 +94,7 @@ namespace Halite {
     return center;
     }*/
 
-  haliteClustering::haliteClustering (PointSource& data, Normalization::Mode normalizationMode, int centralConvolutionValue,
+  HaliteClustering::HaliteClustering (PointSource& data, Normalization::Mode normalizationMode, int centralConvolutionValue,
 				      int neighbourhoodConvolutionValue, double pThreshold, int H, int hardClustering,
 				      int initialLevel, DBTYPE dbType, bool dbDisk) {
     
@@ -122,18 +122,18 @@ namespace Halite {
     readData(data, normalizationMode);
     timeNormalization = (clock()-timeNormalization); //total time spent in the normalization
     
-  }//end haliteClustering::haliteClustering
+  }//end HaliteClustering::HaliteClustering
 
   //---------------------------------------------------------------------------
-  haliteClustering::~haliteClustering() {
+  HaliteClustering::~HaliteClustering() {
 
     // disposes the used structures
     delete calcTree;
 
-  }//end haliteClustering::~haliteClustering
+  }//end HaliteClustering::~HaliteClustering
 
   //---------------------------------------------------------------------------
-  void haliteClustering::findCorrelationClusters() {
+  void HaliteClustering::findCorrelationClusters() {
 
      /**
      * Vector used when discovering relevant attributes.
@@ -336,10 +336,10 @@ namespace Halite {
     mergeBetaClusters(); // merges clusters that share some database space
     printf("\n%d correlation clusters left after the merging phase.\n",numCorrelationClusters()); // prints the number of correlation clusters found
 
-  }//end haliteClustering::findCorrelationClusters
+  }//end HaliteClustering::findCorrelationClusters
 
   //---------------------------------------------------------------------------
-  double haliteClustering::calcCThreshold(const std::vector<double>& attributesRelevance) {
+  double HaliteClustering::calcCThreshold(const std::vector<double>& attributesRelevance) {
     std::vector<double> sortedRelevance(DIM);
 
     for (size_t i = 0; i < DIM; i++) {
@@ -351,7 +351,7 @@ namespace Halite {
 
     return cThreshold;
 
-  }//end haliteClustering::calcCThreshold
+  }//end HaliteClustering::calcCThreshold
 
   //For positive numbers only
   inline double log2ceil(double d) {
@@ -359,7 +359,7 @@ namespace Halite {
     return cl ? log2(cl) : 0;
   }
   //---------------------------------------------------------------------------
-  int haliteClustering::minimumDescriptionLength(const std::vector<double>& sortedRelevance) {
+  int HaliteClustering::minimumDescriptionLength(const std::vector<double>& sortedRelevance) {
     
     int cutPoint=-1;
     double preAverage, postAverage, descriptionLength, minimumDescriptionLength;
@@ -397,10 +397,10 @@ namespace Halite {
     }//end for
     return cutPoint;
 
-  }//end haliteClustering::minimumDescriptionLength
+  }//end HaliteClustering::minimumDescriptionLength
 
   //---------------------------------------------------------------------------
-  int haliteClustering::walkThroughConvolution(int level, stCell& betaClusterCenter, std::vector<stCell>& betaClusterCenterParents) {
+  int HaliteClustering::walkThroughConvolution(int level, stCell& betaClusterCenter, std::vector<stCell>& betaClusterCenterParents) {
     //try to get the db in the current level
     Db *db = calcTree->getDb(level);
     if (!db)
@@ -513,10 +513,10 @@ namespace Halite {
     }
 
     return 1; //Success
-  }//end haliteClustering::walkThroughConvolution
+  }//end HaliteClustering::walkThroughConvolution
 
   //---------------------------------------------------------------------------
-  int haliteClustering::applyConvolution(stCell& cell, std::vector<stCell>& cellParents, int level) {
+  int HaliteClustering::applyConvolution(stCell& cell, std::vector<stCell>& cellParents, int level) {
 
     stCell neighbour;
  
@@ -539,11 +539,11 @@ namespace Halite {
     // return the cell value after applying the convolution matrix
     return newValue;
 
-  }//end haliteClustering::applyConvolution
+  }//end HaliteClustering::applyConvolution
 
  
   //---------------------------------------------------------------------------
-  void haliteClustering::cellPosition(stCell& cell, std::vector<stCell>& cellParents,
+  void HaliteClustering::cellPosition(stCell& cell, std::vector<stCell>& cellParents,
 				      std::vector<double>& min, std::vector<double>& max, int level) {
       if (level) {
 	cellPosition(cellParents[level-1],cellParents,min,max,level-1);
@@ -566,10 +566,10 @@ namespace Halite {
 	}//end for
       }//end if
  
-  }//end haliteClustering::cellPosition
+  }//end HaliteClustering::cellPosition
 
   //---------------------------------------------------------------------------
-  void haliteClustering::cellPositionDimensionE_j(stCell& cell, std::vector<stCell>& cellParents,
+  void HaliteClustering::cellPositionDimensionE_j(stCell& cell, std::vector<stCell>& cellParents,
 						  double *min, double *max, int level, int j) {
 
       if (level) {
@@ -589,10 +589,10 @@ namespace Halite {
 	}//end if
       }//end if
  
-  }//end haliteClustering::cellPositionDimensionE_j
+  }//end HaliteClustering::cellPositionDimensionE_j
 
   //---------------------------------------------------------------------------
-  int haliteClustering::externalNeighbour(int dimIndex, stCell& cell, stCell* neighbour,
+  int HaliteClustering::externalNeighbour(int dimIndex, stCell& cell, stCell* neighbour,
 					  std::vector<stCell>& cellParents, std::vector<stCell>& neighbourParents, int level) {
     if (level) {
       int found;
@@ -612,10 +612,10 @@ namespace Halite {
     }//end if
     return 0; // a cell in level zero never has an external neighbour
 
-  }//end haliteClustering::externalNeighbour
+  }//end HaliteClustering::externalNeighbour
 
   //---------------------------------------------------------------------------
-  int haliteClustering::internalNeighbour(int dimIndex, stCell& cell, stCell* neighbour,
+  int HaliteClustering::internalNeighbour(int dimIndex, stCell& cell, stCell* neighbour,
 					  std::vector<stCell>& cellParents, int level) {
     // creates the id that the neighbour should have
     stCellId neighboursId = cell.id;
@@ -625,10 +625,10 @@ namespace Halite {
 
     return found;
 
-  }//end haliteClustering::internalNeighbour
+  }//end HaliteClustering::internalNeighbour
 
   //---------------------------------------------------------------------------
-  void haliteClustering::readData(PointSource& data, Normalization::Mode mode) {
+  void HaliteClustering::readData(PointSource& data, Normalization::Mode mode) {
     normalization=std::make_shared<Normalization>(data,mode);
     calcTree->setNormalization(normalization);
     classifier->normalization=normalization;
@@ -644,10 +644,10 @@ namespace Halite {
     }//end for
 
 
-  }//end haliteClustering::FastDistExponent
+  }//end HaliteClustering::FastDistExponent
 
  
-  void haliteClustering::mergeBetaClusters() {
+  void HaliteClustering::mergeBetaClusters() {
     std::vector<size_t> rank(numBetaClusters());
     std::vector<size_t> parent(numBetaClusters());
     boost::disjoint_sets<size_t*,size_t* > ds(&rank[0], &parent[0]);
@@ -686,9 +686,9 @@ namespace Halite {
       }
     }
 
-  }//end haliteClustering::mergeBetaClusters
+  }//end HaliteClustering::mergeBetaClusters
 
-  int haliteClustering::shouldMerge(BetaCluster<double>& iCl,BetaCluster<double>& jCl) {
+  int HaliteClustering::shouldMerge(BetaCluster<double>& iCl,BetaCluster<double>& jCl) {
  
     // discovers if beta-cluster i shares database space with beta-cluster j
     int shareSpace=1;
@@ -714,7 +714,7 @@ namespace Halite {
     return 0; //not merge
   }
 
-  int haliteClustering::cost(BetaCluster<double>* iCl, BetaCluster<double>* jCl) {
+  int HaliteClustering::cost(BetaCluster<double>* iCl, BetaCluster<double>* jCl) {
     int cost=0;
 
     //prepare the input for PCA
@@ -772,7 +772,7 @@ namespace Halite {
     return cost;
   }
 
-  int haliteClustering::indCost(double n) {
+  int HaliteClustering::indCost(double n) {
     n = ceil(fabs(n*1000000)); //ignores the sign, since + and - cost the same, and
     //considers the cost of the smallest integer bigger than n
     if (n <= 1) {
@@ -781,7 +781,7 @@ namespace Halite {
     return (int) ceil(log2(n)); // cost of n, when n > 1
   }
 
-  cv::Mat haliteClustering::inputPCA(const BetaCluster<double>* iCl, const BetaCluster<double>* jCl) {
+  cv::Mat HaliteClustering::inputPCA(const BetaCluster<double>* iCl, const BetaCluster<double>* jCl) {
     //prepare the input for PCA
     std::vector<std::vector<double>> cluster;
 

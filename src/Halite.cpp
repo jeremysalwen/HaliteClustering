@@ -60,7 +60,7 @@
  */
 /**
  * @file
- * This file demonstrates the usage of the haliteClustering class.
+ * This file demonstrates the usage of the HaliteClustering class.
  *
  * @version 1.0
  * @author Robson Leonardo Ferreira Cordeiro (robson@icmc.usp.br)
@@ -77,7 +77,7 @@
 #include <string.h>
 #include <time.h>
 
-#include "haliteClustering.h"
+#include "HaliteClustering.h"
 
 #include "PointSource.h"
 
@@ -162,8 +162,8 @@ int main(int argc, char **argv) {
 		datasource=memdb;
 	}
 
-	// creates an object of the class haliteClustering
-	haliteClustering *sCluster = new haliteClustering(*datasource, Normalization::Independent, (2*DIM), -1, atof(argv[1]), atoi(argv[2]), atoi(argv[3]), atoi(argv[4]), dbType, (memory & 2));		
+	// creates an object of the class HaliteClustering
+	HaliteClustering *sCluster = new HaliteClustering(*datasource, Normalization::Independent, (2*DIM), -1, atof(argv[1]), atoi(argv[2]), atoi(argv[3]), atoi(argv[4]), dbType, (memory & 2));		
 	
 	printf("The tree was built.\n");
 	printElapsed(); // prints the elapsed time

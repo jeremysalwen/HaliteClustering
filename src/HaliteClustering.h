@@ -61,7 +61,7 @@
  */
 /**
  * @file
- * This file defines the class haliteClustering.
+ * This file defines the class HaliteClustering.
  *
  * @version 1.0
  * @author Robson Leonardo Ferreira Cordeiro (robson@icmc.usp.br)
@@ -90,7 +90,7 @@
 namespace Halite {
 
   //----------------------------------------------------------------------------
-  // class haliteClustering
+  // class HaliteClustering
   //----------------------------------------------------------------------------
   /**
    * This class is used to find clusters in subspaces of the original data space.
@@ -102,7 +102,7 @@ namespace Halite {
    * @author Caetano Traina Jr (caetano@icmc.usp.br)
    */
   //---------------------------------------------------------------------------
-  class haliteClustering {
+  class HaliteClustering {
 
   public:
 
@@ -118,7 +118,7 @@ namespace Halite {
      * @param hardClustering Choose between hard (1) and soft (0) clustering.
      *
      */
-    haliteClustering (PointSource& data,
+    HaliteClustering (PointSource& data,
 		      Normalization::Mode normalizationMode,
 		      int centralConvolutionValue, int neighbourhoodConvolutionValue,
 		      double pThreshold, int H, int hardClustering, int initialLevel, DBTYPE dbType, bool dbDisk);
@@ -126,7 +126,7 @@ namespace Halite {
     /**
      * Disposes the allocated memory.
      */
-    ~haliteClustering();
+    ~HaliteClustering();
 
     /**
      * Finds clusters in subspaces.
@@ -360,7 +360,7 @@ namespace Halite {
  
     size_t getCenter(size_t level);
 
-  };//end haliteClustering
+  };//end HaliteClustering
   //----------------------------------------------------------------------------
 } //end Halite namespace
 #endif //__HALITECLUSTERING_H
