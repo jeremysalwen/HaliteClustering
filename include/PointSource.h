@@ -21,7 +21,7 @@ namespace Halite {
   template <typename T>
     class PackedArrayPointSource : public PointSource {
   public:
-    PackedArrayPointSource(T* array, size_t dim, size_t size) {
+    PackedArrayPointSource(const T* array, size_t dim, size_t size) {
       this->data=array;
       this->dim=dim;
       this->size=size;
@@ -40,7 +40,7 @@ namespace Halite {
       return &data[index*dim];
     }
   private:
-    T* data;
+    const T* data;
     size_t index;
     size_t dim;
     size_t size;
