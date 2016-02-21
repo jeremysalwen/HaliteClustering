@@ -7,12 +7,14 @@ LDFLAGS := -ldb_cxx -lboost_system -lboost_filesystem  `pkg-config --libs opencv
 
 all: Halite libhalite.so
 
-Halite: demo/Halite.o $(OBJ)
-	$(CXX) demo/Halite.o $(OBJ) $(LDFLAGS) -o Halite
+Halite: demo/Halite.o libhalite.a
+	$(CXX) demo/Halite.o libhalite.a $(LDFLAGS) -o Halite
 
 libhalite.so: $(OBJ)
 	$(CXX) $(OBJ) -shared -o libhalite.so
 
+libhalite.a: $(OBJ)
+	ar -rcs libhalite.a $(OBJ)
 demo:   Halite
 	./Halite 1e-10 4 1 1 0 databases/12d.dat results/result12.dat
 clean:
