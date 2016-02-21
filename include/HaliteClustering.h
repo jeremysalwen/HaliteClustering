@@ -102,6 +102,7 @@ namespace Halite {
    * @author Caetano Traina Jr (caetano@icmc.usp.br)
    */
   //---------------------------------------------------------------------------
+  template <typename D>
   class HaliteClustering {
 
   public:
@@ -118,10 +119,10 @@ namespace Halite {
      * @param hardClustering Choose between hard (1) and soft (0) clustering.
      *
      */
-    HaliteClustering (PointSource& data,
-		      Normalization::Mode normalizationMode,
+    HaliteClustering (PointSource<D>& data,
+		      NormalizationMode normalizationMode,
 		      int centralConvolutionValue, int neighbourhoodConvolutionValue,
-		      double pThreshold, int H, int hardClustering, int initialLevel, DBTYPE dbType, bool dbDisk);
+		      D pThreshold, int H, int hardClustering, int initialLevel, DBTYPE dbType, bool dbDisk);
 
     /**
      * Disposes the allocated memory.
@@ -147,7 +148,7 @@ namespace Halite {
       return correlationClusters.size();
     }
 
-    std::shared_ptr<Classifier<double>> getClassifier() {
+    std::shared_ptr<Classifier<D>> getClassifier() {
       return classifier;
     }
 
@@ -158,7 +159,7 @@ namespace Halite {
     /**
      * Gets the used counting tree.
      */
-    stCountingTree *getCalcTree() {
+    stCountingTree<D> *getCalcTree() {
       return calcTree;
     }//end getCalcTree
 
@@ -188,7 +189,7 @@ namespace Halite {
     /**
      * Counting-tree pointer.
      */
-    stCountingTree *calcTree;
+    stCountingTree<D> *calcTree;
 
 
     /**
@@ -215,10 +216,10 @@ namespace Halite {
     /**
      * Defines the threshold used to spot a beta-cluster, based on the binomial probability.
      */
-    double pThreshold;
+    D pThreshold;
 
-    shared_ptr<Normalization> normalization;
-    shared_ptr<Classifier<double> > classifier;
+    shared_ptr<Normalization<D>> normalization;
+    shared_ptr<Classifier<D> > classifier;
     std::vector<CorrelationCluster> correlationClusters;
 
 
@@ -227,13 +228,13 @@ namespace Halite {
      */
     void mergeBetaClusters();
 
-    int shouldMerge(BetaCluster<double>&  icl, BetaCluster<double>& j);
+    int shouldMerge(BetaCluster<D>&  icl, BetaCluster<D>& j);
 
-    int cost(BetaCluster<double>*  icl, BetaCluster<double>* j);
+    int cost(BetaCluster<D>*  icl, BetaCluster<D>* j);
 
-    int indCost(double n);
+    int indCost(D n);
 
-    cv::Mat inputPCA(const BetaCluster<double>* iCl, const BetaCluster<double>* jCl);
+    cv::Mat inputPCA(const BetaCluster<D>* iCl, const BetaCluster<D>* jCl);
 
      /**
      * Calculates the cThreshold based on the Minimun Description Length (MDL) method.
@@ -241,7 +242,7 @@ namespace Halite {
      * @param attributesRelevance Vector with the calculed relevances of each attribute.
      *
      */
-    double calcCThreshold(const std::vector<double>& attributesRelevance);
+    D calcCThreshold(const std::vector<D>& attributesRelevance);
 
     /**
      * Finds the best cut point position based on the MDL method.
@@ -249,7 +250,7 @@ namespace Halite {
      * @param sortedRelevance Vector with the sorted relevances of each attribute.
      *
      */
-    int minimumDescriptionLength(const std::vector<double>& sortedRelevance);
+    int minimumDescriptionLength(const std::vector<D>& sortedRelevance);
 
     /**
      * Walk through the counting tree applying the convolution matrix
@@ -282,7 +283,7 @@ namespace Halite {
      *
      */
     void cellPosition(stCell& cell, std::vector<stCell>& cellParents,
-		      std::vector<double>& min, std::vector<double>& max, int level);
+		      std::vector<D>& min, std::vector<D>& max, int level);
 
     /**
      * Finds the position of a cell in the data space, regarding a dimension e_j.
@@ -296,7 +297,7 @@ namespace Halite {
      *
      */
     void cellPositionDimensionE_j(stCell& cell, std::vector<stCell>& cellParents,
-				  double *min, double *max, int level, int j);
+				  D *min, D *max, int level, int j);
 
     /**
      * Finds the external face neighbour of cell in a determined dimension.
@@ -329,24 +330,7 @@ namespace Halite {
 			  std::vector<stCell>& cellParents,
 			  int level);
 
-    /**
-     * compare function used by the qsort.
-     *
-     * @param a first double element.
-     * @param b second double element.
-     *
-     */
-    static int compare (const void *a, const void *b) {	     
-      if(*(double*)a > *(double*)b) {
-	return 1;
-      } else {	
-	if(*(double*)a < *(double*)b) {
-	  return -1;
-	}//end if
-      }//end if
-      return 0;
-    }//end compare
-
+ 
     /**
      * Normalize data points and insert them in the counting tree.
      * Method from the stFractalDimension class (adapted).
@@ -355,7 +339,7 @@ namespace Halite {
      * @param Normalization::Mode Determines how data will be normalized.
      *
      */
-    void readData(PointSource& data, Normalization::Mode mode);
+    void readData(PointSource<D>& data, NormalizationMode mode);
 
  
     size_t getCenter(size_t level);

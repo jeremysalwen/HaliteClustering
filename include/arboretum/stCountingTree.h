@@ -11,6 +11,8 @@
 
 #include "Normalization.h"
 namespace Halite {
+  
+  template<typename D>
   class stCountingTree {
   public:
     stCountingTree(int H, DBTYPE dbType, bool dbDisk, int DIM) {
@@ -68,12 +70,12 @@ namespace Halite {
 
     }
 
-    char insertPoint(const double *point, double *normPoint) {
+    char insertPoint(const D *point, D *normPoint) {
       const size_t nPos = (P.size() + 7) / 8;
 
       //creates used arrays
-      std::vector<double> min(P.size(), 0);
-      std::vector<double> max(P.size(), 1);
+      std::vector<D> min(P.size(), 0);
+      std::vector<D> max(P.size(), 1);
       std::vector<unsigned char> fullId((H-1)*nPos, 0);
 
       std::vector<stCell> cellAndParents;
@@ -110,7 +112,7 @@ namespace Halite {
       return &P[0];
     }
 
-    void setNormalization(std::shared_ptr<Normalization> normalization) {
+    void setNormalization(std::shared_ptr<Normalization<D>> normalization) {
       this->normalization=normalization;
     }
     int findInNode(std::vector<stCell>& parents, stCell* cell, stCellId& id, int level) {
@@ -182,11 +184,11 @@ namespace Halite {
     }
 
   private:
-    void deepInsert(size_t level, double* min, double *max, double *point, std::vector<unsigned char>& fullId, std::vector<stCell>& cellAndParents) {
+    void deepInsert(size_t level, D* min, D *max, D *point, std::vector<unsigned char>& fullId, std::vector<stCell>& cellAndParents) {
       if (level < H-1) {
 	// mounts the id of the cell that covers point in the current level
 	// and stores in min/max this cell's lower and upper bounds
-	double middle;
+	D middle;
 	stCellId cellId = stCellId(P.size());
 	for (unsigned int i=0; i<P.size(); i++) {
 	  middle = (max[i] - min[i]) / 2 + min[i];
@@ -250,7 +252,7 @@ namespace Halite {
     size_t sumOfPoints;
     size_t H;
     std::vector<std::unique_ptr<Db>> levels;
-    std::shared_ptr<Halite::Normalization> normalization;
+    std::shared_ptr<Halite::Normalization<D>> normalization;
   };
 
 }

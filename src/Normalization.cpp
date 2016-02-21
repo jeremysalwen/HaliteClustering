@@ -5,22 +5,23 @@
 #include <iostream>
 
 namespace Halite {
-  Normalization::Normalization(PointSource& data, Mode mode) {
+  template<typename D>
+  Normalization<D>::Normalization(PointSource<D>& data, NormalizationMode mode) {
     size_t DIM=data.dimension();
 
     slope.resize(DIM, 1.0);
     yIntercept.resize(DIM, 0.0);
     
-    std::vector<double> minD(DIM,0.0);
-    std::vector<double> maxD(DIM,0.0);
+    std::vector<D> minD(DIM,0.0);
+    std::vector<D> maxD(DIM,0.0);
 
     // normalizes the data
     minMax(data, minD, maxD);
 
     
-    double normalizationFactor = 1.0;
+    D normalizationFactor = 1.0;
 
-    std::vector<double> resultPoint(DIM,0.0);
+    std::vector<D> resultPoint(DIM,0.0);
  
     for (size_t i = 0; i < DIM; i++) {
       slope[i] = (maxD[i] - minD[i]) * normalizationFactor; //a takes the range of each dimension
@@ -31,7 +32,7 @@ namespace Halite {
     }//end for
 
     if (mode != Independent) {
-      double slopeVal;
+      D slopeVal;
       if(mode==MaintainProportion || mode == GeoReferenced) {
 	slopeVal=*std::max_element(slope.begin(), slope.end());
       } else if(mode==Clip){
@@ -43,15 +44,16 @@ namespace Halite {
     }//end if
   
   }
-   void Normalization::minMax(PointSource& data, std::vector<double>& min, std::vector<double>& max) {
+  template<typename D>
+  void Normalization<D>::minMax(PointSource<D>& data, std::vector<D>& min, std::vector<D>& max) {
     size_t DIM=data.dimension();
     for (size_t j = 0; j<DIM; j++){ // sets the values to the minimum/maximum possible here
-      min[j] = MAXDOUBLE;
-      max[j] = -MAXDOUBLE;
+      min[j] = std::numeric_limits<D>::max();
+      max[j] = std::numeric_limits<D>::lowest();
     }// end for
     // looking for the minimum and maximum values
     for (data.restartIteration(); data.hasNext();) {
-      const double* onePoint=data.readPoint();
+      const D* onePoint=data.readPoint();
       for (size_t j = 0; j<DIM; j++) {
 	if (onePoint[j] < min[j]) {
 	  min[j] = onePoint[j];
@@ -62,4 +64,7 @@ namespace Halite {
       }//end for
     }//end for
   }
+
+  template class Normalization<float>;
+  template class Normalization<double>;
 }

@@ -10,16 +10,17 @@
 #include <sstream>
 
 namespace Halite {
+  template <typename T>
   class PointSource {
   public:
     virtual size_t dimension()      = 0;
     virtual void restartIteration() = 0;
     virtual bool hasNext()   = 0;
-    virtual const double* readPoint() = 0;
+    virtual const T* readPoint() = 0;
     virtual ~PointSource() {};
   };
   template <typename T>
-    class PackedArrayPointSource : public PointSource {
+    class PackedArrayPointSource : public PointSource<T> {
   public:
     PackedArrayPointSource(const T* array, size_t dim, size_t size) {
       this->data=array;
@@ -36,7 +37,7 @@ namespace Halite {
     bool hasNext() {
       return index<size;
     }
-    const double* readPoint() {
+    const T* readPoint() {
       return &data[index*dim];
     }
   private:
@@ -46,10 +47,10 @@ namespace Halite {
     size_t size;
   };
 
-
-  class ArrayOfPointersPointSource : public PointSource {
+template <typename T>
+  class ArrayOfPointersPointSource : public PointSource<T> {
   public:
-    ArrayOfPointersPointSource(double** array, size_t dim, size_t size) {
+    ArrayOfPointersPointSource(T** array, size_t dim, size_t size) {
       this->data=array;
       this->dim=dim;
       this->size=size;
@@ -63,17 +64,17 @@ namespace Halite {
     bool hasNext() {
       return index<size;
     }
-    const double* readPoint() {
+    const T* readPoint() {
       return data[index++];
     }
   private:
-    double** data;
+    T** data;
     size_t index;
     size_t dim;
     size_t size;
   };
-
-  class TextFilePointSource : public PointSource {
+template <typename T>
+  class TextFilePointSource : public PointSource<T> {
   public:
   TextFilePointSource(const char* filename):database(filename) {
       if(!database.is_open()) {
@@ -84,7 +85,7 @@ namespace Halite {
       std::istringstream ss(nextline);
       dim=0;
       while(true) {
-	double tmp;
+	T tmp;
 	ss >> tmp;
 	if(!ss) break;
 	dim++;
@@ -104,7 +105,7 @@ namespace Halite {
     bool hasNext() {
       return !database.eof();
     }
-    const double* readPoint() {
+    const T* readPoint() {
       std::istringstream ss(nextline);
 
       for (size_t j=0; j<dim; j++) {
@@ -120,7 +121,7 @@ namespace Halite {
     std::string nextline;
     std::ifstream database;
     size_t dim;
-    std::vector<double> tmparray;
+    std::vector<T> tmparray;
   };
 }
 #endif //__POINTSOURCE_H

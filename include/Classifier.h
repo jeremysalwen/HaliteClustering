@@ -19,9 +19,9 @@ namespace Halite {
      * if you are using soft clustering, pass a std::back_inserter to your favorite container to store the results.
      */
     template<typename Iterator>
-      Iterator assignToClusters(const double* point, Iterator out) {
+      Iterator assignToClusters(const D* point, Iterator out) {
       for(size_t i=0; i<betaClusters.size(); i++) {
-	BetaCluster<double>& betaCluster=betaClusters[i];
+	BetaCluster<D>& betaCluster=betaClusters[i];
 	bool belongsTo=true;
 	std::vector<D> denormMin(betaCluster.min.size());
 	std::vector<D> denormMax(betaCluster.max.size());
@@ -48,7 +48,7 @@ namespace Halite {
     
     bool hardClustering;
 
-    std::shared_ptr<Normalization> normalization;
+    std::shared_ptr<Normalization<D>> normalization;
 
     std::vector<BetaCluster<D> > betaClusters;
   };

@@ -102,6 +102,7 @@ void printElapsed() {
 	printf("Elapsed time: %0.3lf sec.\n\n",(double)(clock()-startTime)/CLOCKS_PER_SEC);
 }//end printElapsed
 
+typedef double Dbl;
 /**
  * Initiates the clustering process.
  *
@@ -137,39 +138,39 @@ int main(int argc, char **argv) {
 		return 1; //error
 	}//end if
 
-	PointSource*  db;
+	PointSource<Dbl>*  db;
 	try {
-		db=new TextFilePointSource(argv[6]);
+	  db=new TextFilePointSource<Dbl>(argv[6]);
 	} catch(std::exception& e) {
 	  std::cout<<e.what()<<"\n";
 		printf("'Halite could not open database file.\n");
 		return 1;
 	}
 	size_t DIM=db->dimension();
-	PointSource* memdb=NULL;
-	PointSource* datasource=db;
-	std::vector<double*> objectsArray;
+	PointSource<Dbl>* memdb=NULL;
+	PointSource<Dbl>* datasource=db;
+	std::vector<Dbl*> objectsArray;
 	if (!(memory & 1)) { //unlimited memory
 		for(db->restartIteration(); db->hasNext();) {
-			double* tmp = new double[DIM];
-			const double* t=db->readPoint();
+			Dbl* tmp = new Dbl[DIM];
+			const Dbl* t=db->readPoint();
 			for(unsigned int j=0; j<DIM; j++) {
 				tmp[j]=t[j];
 			}
 			objectsArray.push_back(tmp);
 		}//end for
-		memdb=new ArrayOfPointersPointSource(&objectsArray[0],db->dimension(),objectsArray.size());
+		memdb=new ArrayOfPointersPointSource<Dbl>(&objectsArray[0],db->dimension(),objectsArray.size());
 		datasource=memdb;
 	}
 
 	// creates an object of the class HaliteClustering
-	HaliteClustering *sCluster = new HaliteClustering(*datasource, Normalization::Independent, (2*DIM), -1, atof(argv[1]), atoi(argv[2]), atoi(argv[3]), atoi(argv[4]), dbType, (memory & 2));		
+	HaliteClustering<Dbl> *sCluster = new HaliteClustering<Dbl>(*datasource, NormalizationMode::Independent, (2*DIM), -1, atof(argv[1]), atoi(argv[2]), atoi(argv[3]), atoi(argv[4]), dbType, (memory & 2));		
 	
 	printf("The tree was built.\n");
 	printElapsed(); // prints the elapsed time
 	
 	printf("Time spent in the normalization.\n");
-	printf("Time: %0.3lf sec.\n\n",(double)(sCluster->getTimeNormalization())/CLOCKS_PER_SEC);
+	printf("Time: %0.3lf sec.\n\n",(Dbl)(sCluster->getTimeNormalization())/CLOCKS_PER_SEC);
 	
 	// looks for correlation clusters
 	sCluster->findCorrelationClusters();
@@ -182,7 +183,7 @@ int main(int argc, char **argv) {
 
 	unsigned int numCorrelationClusters=sCluster->numCorrelationClusters();
 
-	shared_ptr<Classifier<double>> classifier=sCluster->getClassifier();
+	shared_ptr<Classifier<Dbl>> classifier=sCluster->getClassifier();
 	std::vector<CorrelationCluster>& correlationClusters=sCluster->getCorrelationClusters();
 	// axes relevant to the found clusters
 	for (unsigned int i=0; i<numCorrelationClusters; i++) {
@@ -197,7 +198,7 @@ int main(int argc, char **argv) {
 	
 	// labels each point after the clusters found
 	fputs("LABELING\n",result);
-	const double *onePoint;
+	const Dbl *onePoint;
 
 	int point=0;
 	for (datasource->restartIteration(); datasource->hasNext(); point++) {
