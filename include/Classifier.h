@@ -23,12 +23,21 @@ namespace Halite {
       for(size_t i=0; i<betaClusters.size(); i++) {
 	BetaCluster<D>& betaCluster=betaClusters[i];
 	bool belongsTo=true;
-	std::vector<D> denormMin(betaCluster.min.size());
-	std::vector<D> denormMax(betaCluster.max.size());
-	normalization->denormalize(betaCluster.min.begin(), denormMin.begin());
-	normalization->denormalize(betaCluster.max.begin(), denormMax.begin());
+
+
+	std::vector<D>& denormMin=betaCluster.min;
+	std::vector<D>& denormMax=betaCluster.max;
+
+	//If normalized, undo the normalization
+	if(normalization) {
+	  std::vector<D> tmpMin(betaCluster.min.size());
+	  std::vector<D> tmpMax(betaCluster.max.size());
+	  
+	  normalization->denormalize(betaCluster.min.begin(), tmpMin.begin());
+	  normalization->denormalize(betaCluster.max.begin(), tmpMax.begin());
+	}
 	
-	// undoes the normalization and verify if the current point belongs to the current beta-cluster
+	// verify if the current point belongs to the current beta-cluster
 	for (size_t dim=0; belongsTo && dim<betaCluster.min.size(); dim++) {			       
 	  if (! (point[dim] >= denormMin[dim] && 
 		 point[dim] <= denormMax[dim]) ) {
@@ -45,6 +54,7 @@ namespace Halite {
       return out;
     }
 
+    void denormalize();
     
     bool hardClustering;
 
