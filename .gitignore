@@ -1,0 +1,7 @@
+.clang_complete
+libhalite.a
+libhalite.so
+Halite
+results/*.dat
+*~
+*.o
