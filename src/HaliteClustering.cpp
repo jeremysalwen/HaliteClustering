@@ -720,7 +720,7 @@ namespace Halite {
 	if (jCl.cost==-1) {
 	  jCl.cost = cost(&jCl,NULL);
 	}
-	return ((D)(iCl.cost+jCl.cost)/cost(&iCl,&jCl)) >= 1; //merges if the merged cluster compacts best
+	return (D)(iCl.cost+jCl.cost)>=cost(&iCl,&jCl); //merges if the merged cluster compacts best
       }
       return 1; //merge
     }
