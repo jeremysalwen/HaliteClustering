@@ -18,7 +18,7 @@ libhalite.a: $(OBJ)
 demo:   Halite
 	./Halite 1e-10 4 1 1 0 databases/12d.dat results/result12.dat
 clean:
-	rm $(OBJ) demo/Halite.o
+	rm -f $(OBJ) demo/Halite.o
 
 spotless: clean
 	rm -f Halite
