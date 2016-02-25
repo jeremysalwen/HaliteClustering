@@ -38,7 +38,7 @@ namespace Halite {
       return index<size;
     }
     const T* readPoint() {
-      return &data[index*dim];
+      return &data[index++*dim];
     }
   private:
     const T* data;
