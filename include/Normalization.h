@@ -14,7 +14,7 @@ namespace Halite {
        In Independent mode, they are all independently sized
     */
     enum NormalizationMode {
-      Independent = 0, MaintainProportion, Clip, GeoReferenced
+      Independent = 0, MaintainProportion, Clip
     };
 
   

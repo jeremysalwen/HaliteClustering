@@ -33,7 +33,7 @@ namespace Halite {
 
     if (mode != Independent) {
       D slopeVal;
-      if(mode==MaintainProportion || mode == GeoReferenced) {
+      if(mode==MaintainProportion) {
 	slopeVal=*std::max_element(slope.begin(), slope.end());
       } else if(mode==Clip){
 	slopeVal=*std::min_element(slope.begin(), slope.end());
