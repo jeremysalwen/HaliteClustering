@@ -122,7 +122,7 @@ namespace Halite {
     HaliteClustering (PointSource<D>& data,
 		      NormalizationMode normalizationMode,
 		      int centralConvolutionValue, int neighbourhoodConvolutionValue,
-		      D pThreshold, int H, bool hardClustering, int initialLevel, DBTYPE dbType, bool dbDisk);
+		      D pThreshold, int H, bool hardClustering, int initialLevel, DBTYPE dbType, uint64_t cache_size);
 
     /**
      * Disposes the allocated memory.

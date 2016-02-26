@@ -96,7 +96,7 @@ namespace Halite {
   template <typename D>
   HaliteClustering<D>::HaliteClustering (PointSource<D>& data, NormalizationMode normalizationMode, int centralConvolutionValue,
 				      int neighbourhoodConvolutionValue, D pThreshold, int H, bool hardClustering,
-				      int initialLevel, DBTYPE dbType, bool dbDisk) {
+				      int initialLevel, DBTYPE dbType, uint64_t cache_size) {
     
     // stores DIM, H, hardClustering and initialLevel
 
@@ -116,7 +116,7 @@ namespace Halite {
     classifier->hardClustering=hardClustering;
     
     // builds the counting tree and inserts objects on it
-    calcTree = new stCountingTree<D>(H, dbType, dbDisk,DIM);
+    calcTree = new stCountingTree<D>(H, dbType, cache_size, DIM);
         
     timeNormalization = clock(); //start normalization time
     readData(data, normalizationMode);

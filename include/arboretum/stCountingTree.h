@@ -15,47 +15,45 @@ namespace Halite {
   template<typename D>
   class stCountingTree {
   public:
-    stCountingTree(int H, DBTYPE dbType, bool dbDisk, int DIM) {
+    stCountingTree(int H, DBTYPE dbType, uint64_t cache_size, int DIM) {
+      bool dbDisk=false; //Keep this old param for debugging
+
       //empty tree
       this->H = H;
       sumOfPoints = 0;
 
       P.resize(DIM,0);
 
+      env=std::unique_ptr<DbEnv>(new DbEnv(0));
+
+    
+      u_int32_t cacheSizeG, cacheSizeB;
+      cacheSizeG = cache_size / (1024*1024*1024);
+      cacheSizeB = cache_size - (1024*1024*1024)*cacheSizeG;
+      if(env->set_cachesize(cacheSizeG, cacheSizeB, 1)) {
+	std::cerr << "Error setting cache size.\n";
+      }
+      env->set_tmp_dir(".");
+      
+      if(env->open(NULL, DB_CREATE | DB_INIT_MPOOL | DB_PRIVATE, 0)) {
+	std::cerr<< "Error opening db environment.\n";
+      }
       for(int i=0; i<H-1; i++) {
-	levels.push_back(std::unique_ptr<Db>(new Db(NULL,0)));
+	levels.push_back(std::unique_ptr<Db>(new Db(env.get(),0)));
       }
     
       //create/open one dataset per tree level
       for (int i=0; i<H-1; i++) {
 	//create dbName
 	std::string dbName=str(boost::format("level_%1%.db") % i);
+
 	boost::filesystem::remove(dbName);
-	      
+	
 	//create and open dataset
 	levels[i]->set_flags(0); //no duplicates neither special configurations
-	u_int32_t cacheSizeG, cacheSizeB;
-	switch (i) {
-	case 0:
-	  cacheSizeG = 0;
-	  cacheSizeB = 33554432; //32MB
-	  break;
-	case 1:
-	  cacheSizeG = 0;
-	  cacheSizeB = 268435456; //256MB
-	  break;
-	case 2:
-	  cacheSizeG = 1; //1.5GB
-	  cacheSizeB = 524288000;
-	  break;
-	default: //For cases more than 2, just default to the largest (this code put in by Jeremy)
-	  cacheSizeG = 1; //1.5GB
-	  cacheSizeB = 524288000;
+	if(levels[i]->open(NULL, (dbDisk)?dbName.c_str():NULL, NULL, dbType, DB_CREATE, 0)) {
+	  std::cerr<<"Error opening db.\n";
 	}
-	if (levels[i]->set_cachesize(cacheSizeG,cacheSizeB,1)) {
-	  std::cout << "Error setting cache size in level " << i << "." << std::endl;
-	}
-	levels[i]->open(NULL, (dbDisk)?dbName.c_str():NULL, NULL, dbType, DB_CREATE, 0);
       }
     }
     ~stCountingTree() {
@@ -67,6 +65,7 @@ namespace Halite {
 	std::string dbName=str(boost::format("level_%1%.db") % i);
 	boost::filesystem::remove(dbName);
       }
+      env->close(0);
 
     }
 
@@ -252,6 +251,7 @@ namespace Halite {
     size_t sumOfPoints;
     size_t H;
     std::vector<std::unique_ptr<Db>> levels;
+    std::unique_ptr<DbEnv> env;
     std::shared_ptr<Halite::Normalization<D>> normalization;
   };
 
