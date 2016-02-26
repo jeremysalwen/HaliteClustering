@@ -95,7 +95,7 @@ namespace Halite {
     }*/
   template <typename D>
   HaliteClustering<D>::HaliteClustering (PointSource<D>& data, NormalizationMode normalizationMode, int centralConvolutionValue,
-				      int neighbourhoodConvolutionValue, D pThreshold, int H, int hardClustering,
+				      int neighbourhoodConvolutionValue, D pThreshold, int H, bool hardClustering,
 				      int initialLevel, DBTYPE dbType, bool dbDisk) {
     
     // stores DIM, H, hardClustering and initialLevel
@@ -205,14 +205,10 @@ namespace Halite {
 	      attributesRelevance[i] = (100*center)/((D)total/6);
 	      // right critical value for the statistical test
 	      int criticalValue = GetCriticalValueBinomialRight2(total, (D)1/6, pThreshold);
-	      if(criticalValue<0) {
-		ok=1;
-	      }	else {
-		size_t critVal=(size_t)criticalValue;
-		if (center > critVal && old_center[i] != center && old_critical[i] != critVal) {
-		  ok=1; // new cluster found
-		}//end if
-	      }
+	      size_t critVal=(size_t)criticalValue;
+	      if (center > critVal && old_center[i] != center && old_critical[i] != critVal) {
+		ok=1; // new cluster found
+	      }//end if
 
 	      old_center[i] = center;
 	      old_critical[i] = criticalValue;
@@ -231,9 +227,7 @@ namespace Halite {
 	      attributesRelevance[i] = (100*center)/((D)total/2);
 	      // right critical value for the statistical test
 	      int criticalValue = GetCriticalValueBinomialRight2(total, (D)1/2, pThreshold);
-	      if(criticalValue<0) {
-		ok=1;
-	      } else if (center > (size_t) criticalValue) {
+	      if (center > (size_t) criticalValue) {
 		ok=1; // new cluster found
 	      }//end if
 	    }//end for

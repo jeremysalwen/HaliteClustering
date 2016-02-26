@@ -122,7 +122,7 @@ namespace Halite {
     HaliteClustering (PointSource<D>& data,
 		      NormalizationMode normalizationMode,
 		      int centralConvolutionValue, int neighbourhoodConvolutionValue,
-		      D pThreshold, int H, int hardClustering, int initialLevel, DBTYPE dbType, bool dbDisk);
+		      D pThreshold, int H, bool hardClustering, int initialLevel, DBTYPE dbType, bool dbDisk);
 
     /**
      * Disposes the allocated memory.
@@ -200,7 +200,7 @@ namespace Halite {
     /**
      * Choose between hard and soft clustering.
      */
-    int hardClustering;
+    bool hardClustering;
 
     /**
      * Defines the initial tree level to look for clusters.

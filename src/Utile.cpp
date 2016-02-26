@@ -512,8 +512,15 @@ int GetCriticalValueBinomialRight2(int n, double p, double dAlpha){
 		}
 
 		if (iCriticalValue == (n+1)){
-			cerr << "Right critical value: Binomial approx: Critical value reached n" << endl;
-			iCriticalValue = (int)ceil(n * p);
+		  //Commented out since this was warning whenever clustering a single point
+		  //cerr << "Right critical value: Binomial approx: Critical value reached n" << endl;
+
+		  //Jeremy:
+		  //This occurs when dAlpha is so small that the critical value is n,
+		  //yet the total sum is less than 1-aLpha due to rounding errors.
+		  //This means that the critical value should be n, not ceil(n*p).
+		  iCriticalValue = n;
+		  //iCriticalValue = (int)ceil(n * p);
 		}
 
 		return iCriticalValue;
