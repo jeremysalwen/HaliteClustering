@@ -16,8 +16,6 @@ namespace Halite {
   class stCountingTree {
   public:
     stCountingTree(int H, DBTYPE dbType, uint64_t cache_size, int DIM) {
-      bool dbDisk=false; //Keep this old param for debugging
-
       //empty tree
       this->H = H;
       sumOfPoints = 0;
@@ -29,11 +27,11 @@ namespace Halite {
     
       u_int32_t cacheSizeG, cacheSizeB;
       cacheSizeG = cache_size / (1024*1024*1024);
-      cacheSizeB = cache_size - (1024*1024*1024)*cacheSizeG;
+      cacheSizeB = cache_size - (1024*1024*1024)*(uint64_t)cacheSizeG;
       if(env->set_cachesize(cacheSizeG, cacheSizeB, 1)) {
 	std::cerr << "Error setting cache size.\n";
       }
-      env->set_tmp_dir(".");
+      //  env->set_tmp_dir(".");
       
       if(env->open(NULL, DB_CREATE | DB_INIT_MPOOL | DB_PRIVATE, 0)) {
 	std::cerr<< "Error opening db environment.\n";
@@ -51,21 +49,22 @@ namespace Halite {
 	
 	//create and open dataset
 	levels[i]->set_flags(0); //no duplicates neither special configurations
-	if(levels[i]->open(NULL, (dbDisk)?dbName.c_str():NULL, NULL, dbType, DB_CREATE, 0)) {
+	if(levels[i]->open(NULL, dbName.c_str(), NULL, dbType, DB_CREATE, 0)) {
 	  std::cerr<<"Error opening db.\n";
 	}
       }
     }
     ~stCountingTree() {
+      env->close(0);
       //close and remove one dataset per tree level
       for (size_t i=0; i<H-1; i++) {
-	//close the dataset
-	levels[i]->close(0);
+	//do not need to close, since env->close(0) closed it already without flushing
+	//levels[i]->close(0); 
  
 	std::string dbName=str(boost::format("level_%1%.db") % i);
 	boost::filesystem::remove(dbName);
       }
-      env->close(0);
+  
 
     }
 

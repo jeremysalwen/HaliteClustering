@@ -22,12 +22,11 @@ namespace Halite {
     D normalizationFactor = 1.0;
 
     std::vector<D> resultPoint(DIM,0.0);
- 
     for (size_t i = 0; i < DIM; i++) {
       slope[i] = (maxD[i] - minD[i]) * normalizationFactor; //a takes the range of each dimension
       yIntercept[i] = minD[i];
       if (slope[i] == 0) {
-	yIntercept[i] = 1;
+	slope[i] = 1;
       }//end if
     }//end for
 
@@ -62,6 +61,7 @@ namespace Halite {
 	  max[j] = onePoint[j];
 	}//end if
       }//end for
+
     }//end for
   }
 

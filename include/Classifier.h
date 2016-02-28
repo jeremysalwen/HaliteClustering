@@ -13,38 +13,35 @@ namespace Halite {
   template <typename D>
   class Classifier {
   public:
+     
     /**
      * Finds clustering of a point, and writes all clusters to the out iterator
      * if you are using hard clustering, just pass a pointer to the integer you want it to write to (it will not write anything for outliers)
      * if you are using soft clustering, pass a std::back_inserter to your favorite container to store the results.
      */
     template<typename Iterator>
-      Iterator assignToClusters(const D* point, Iterator out) {
+    Iterator assignToClusters(const D* point, Iterator out) {
+      if(betaClusters.empty()) {
+	return out;
+      }      
+      size_t DIM=betaClusters[0].min.size();
+
+      std::vector<D> normalized(normalization?DIM:0);
+      if(normalization) {
+	normalization->normalize(point, normalized.data());
+      }
+      
       for(size_t i=0; i<betaClusters.size(); i++) {
 	BetaCluster<D>& betaCluster=betaClusters[i];
-	bool belongsTo=true;
 
-
-	std::vector<D>& denormMin=betaCluster.min;
-	std::vector<D>& denormMax=betaCluster.max;
-
-	//If normalized, undo the normalization
+	bool contains;
 	if(normalization) {
-	  std::vector<D> tmpMin(betaCluster.min.size());
-	  std::vector<D> tmpMax(betaCluster.max.size());
-	  
-	  normalization->denormalize(betaCluster.min.begin(), tmpMin.begin());
-	  normalization->denormalize(betaCluster.max.begin(), tmpMax.begin());
+	  contains=betaCluster.contains(normalized.begin());
+	} else {
+	  contains=betaCluster.contains(point);
 	}
 	
-	// verify if the current point belongs to the current beta-cluster
-	for (size_t dim=0; belongsTo && dim<betaCluster.min.size(); dim++) {			       
-	  if (! (point[dim] >= denormMin[dim] && 
-		 point[dim] <= denormMax[dim]) ) {
-	    belongsTo = false; // this point does not belong to the current beta-cluster
-	  }
-	}
-	if(belongsTo) {
+	if(contains) {
 	  *out++ = betaCluster.correlationCluster+1;
 	  if(this->hardClustering) {
 	    return out;
@@ -61,7 +58,7 @@ namespace Halite {
     std::shared_ptr<Normalization<D>> normalization;
 
     std::vector<BetaCluster<D> > betaClusters;
-  };
+    };
 }
 
 #endif

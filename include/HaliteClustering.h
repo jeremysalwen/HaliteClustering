@@ -111,18 +111,14 @@ namespace Halite {
      * Creates the needed structures to find correlation clusters.
      *
      * @param PointSource Source of the database objects.
-     * @param normalizeFactor Determines how data will be normalized.
-     * @param centralConvolutionValue Determines the central weight in the convolution matrix.
-     * @param neighbourhoodConvolutionValue Determines the face neighbours weight in the convolution matrix.
      * @param pThreshold Threshold used to spot a beta-cluster, based on the binomial probability.
-     * @param H The number of grid levels to build the counting tree.
+     * @param H The number of grid levels tobuild the counting tree.
      * @param hardClustering Choose between hard (1) and soft (0) clustering.
      *
      */
-    HaliteClustering (PointSource<D>& data,
-		      NormalizationMode normalizationMode,
-		      int centralConvolutionValue, int neighbourhoodConvolutionValue,
-		      D pThreshold, int H, bool hardClustering, int initialLevel, DBTYPE dbType, uint64_t cache_size);
+    HaliteClustering(PointSource<D>& data, bool hardClustering, uint64_t cache_size = 2*1024*1024*1024,
+		      NormalizationMode NormalizationMode = NormalizationMode::Independent,
+		      D pThreshold = 1e-10, int H = 4, DBTYPE dbType = DB_HASH);
 
     /**
      * Disposes the allocated memory.

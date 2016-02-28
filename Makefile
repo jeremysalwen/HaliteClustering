@@ -16,7 +16,7 @@ libhalite.so: $(OBJ)
 libhalite.a: $(OBJ)
 	ar -rcs libhalite.a $(OBJ)
 demo:   Halite
-	./Halite 1e-10 4 1 1 1 1024 databases/12d.dat results/result12.dat
+	./Halite 1 1e-10 4 1 1024 databases/12d.dat result12d.dat
 clean:
 	rm -f $(OBJ) demo/Halite.o
 

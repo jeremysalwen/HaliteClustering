@@ -94,20 +94,21 @@ namespace Halite {
     return center;
     }*/
   template <typename D>
-  HaliteClustering<D>::HaliteClustering (PointSource<D>& data, NormalizationMode normalizationMode, int centralConvolutionValue,
-				      int neighbourhoodConvolutionValue, D pThreshold, int H, bool hardClustering,
-				      int initialLevel, DBTYPE dbType, uint64_t cache_size) {
+  HaliteClustering<D>::HaliteClustering (PointSource<D>& data, bool hardClustering, uint64_t cache_size, NormalizationMode normalizationMode, D pThreshold, int H, DBTYPE dbType) {
     
     // stores DIM, H, hardClustering and initialLevel
 
     this->DIM=data.dimension();
     this->H = H;
     this->hardClustering = hardClustering;
-    this->initialLevel = initialLevel;
 
-    // stores the convolution matrix (center and direct neighbours)
-    this->centralConvolutionValue=centralConvolutionValue;
-    this->neighbourhoodConvolutionValue=neighbourhoodConvolutionValue;
+    //Start at the 2nd level, since you need to look at your
+    //parents for the statistical significance test
+    this->initialLevel = 1;
+
+    //"Laplacian" filter, using only direct neighbors
+    this->centralConvolutionValue = 2 * DIM;
+    this->neighbourhoodConvolutionValue = -1;
 
     // stores the pThreshold
     this->pThreshold = pThreshold;

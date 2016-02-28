@@ -114,23 +114,23 @@ int main(int argc, char **argv) {
 	initClock(); // initiates the meassurement of run time
 	
 	// first validations
-	if (argc != 9) {
-	  printf("Usage: Halite <pThreshold> <H> <hardClustering> <initialLevel> <cache_points> <cache_mb> <infile> <outfile>\n");
+	if (argc != 8) {
+	  printf("Usage: Halite <hardClustering> <pThreshold> <H> <cache_points> <cache_mb> <infile> <outfile>\n");
 		return 1; //error
 	}//end if
 	
-	if (atoi(argv[2]) < 2) {
+	if (atoi(argv[3]) < 2) {
 		printf("Halite needs at least two resolution levels (H >= 2) to perform the clustering process.\n");
 		return 1; //error
 	}//end if
 	
-	char cachepoints=atoi(argv[5]);
+	char cachepoints=atoi(argv[4]);
 	if (cachepoints<0 || cachepoints>1) {
 		printf("Possible values for cache_points are 0 (do not cache) and 1 (cache data points in memory)\n");
 		return 1;
 	}//end if
 
-	long cachesize=atol(argv[6]);
+	long cachesize=atol(argv[5]);
 	uint64_t cache_size=cachesize*1024*1024;
 	if(cachesize < 1) {
 	  printf("Please give at least one megabyte of cache.\n");
@@ -138,7 +138,7 @@ int main(int argc, char **argv) {
 	}
 	// opens/creates the used files
 	FILE  *result;
-	result=fopen(argv[8], "w");
+	result=fopen(argv[7], "w");
 	if (!result) {
 		printf("Halite could not create the result file.\n");
 		return 1; //error
@@ -146,7 +146,7 @@ int main(int argc, char **argv) {
 
 	PointSource<Dbl>*  db;
 	try {
-	  db=new TextFilePointSource<Dbl>(argv[7]);
+	  db=new TextFilePointSource<Dbl>(argv[6]);
 	} catch(std::exception& e) {
 	  std::cout<<e.what()<<"\n";
 		printf("'Halite could not open database file.\n");
@@ -170,7 +170,7 @@ int main(int argc, char **argv) {
 	}
 
 	// creates an object of the class HaliteClustering
-	HaliteClustering<Dbl> *sCluster = new HaliteClustering<Dbl>(*datasource, NormalizationMode::Independent, (2*DIM), -1, atof(argv[1]), atoi(argv[2]), atoi(argv[3]), atoi(argv[4]), dbType, cache_size);		
+	HaliteClustering<Dbl> *sCluster = new HaliteClustering<Dbl>(*datasource, argv[1], cache_size, NormalizationMode::Independent, atof(argv[2]), atoi(argv[3]), dbType);		
 	
 	printf("The tree was built.\n");
 	printElapsed(); // prints the elapsed time

@@ -5,8 +5,8 @@ namespace Halite {
   void Classifier<D>::denormalize() {
     if(normalization) {
       for(BetaCluster<D>& b:betaClusters) {
-	normalization->normalize(b.min.begin(), b.min.begin());
-	normalization->normalize(b.max.begin(), b.max.begin());
+	normalization->denormalize(b.min.begin(), b.min.begin());
+	normalization->denormalize(b.max.begin(), b.max.begin());
       }
       normalization.reset();
     }
