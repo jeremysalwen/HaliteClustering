@@ -117,8 +117,9 @@ namespace Halite {
      *
      */
     HaliteClustering(PointSource<D>& data, bool hardClustering, uint64_t cache_size = 2*1024*1024*1024,
-		      NormalizationMode NormalizationMode = NormalizationMode::Independent,
-		      D pThreshold = 1e-10, int H = 4, DBTYPE dbType = DB_HASH);
+		     const std::string& tmpdir=".",
+		     NormalizationMode NormalizationMode = NormalizationMode::Independent,
+		     D pThreshold = 1e-10, int H = 4, DBTYPE dbType = DB_HASH);
 
     /**
      * Disposes the allocated memory.

@@ -94,7 +94,7 @@ namespace Halite {
     return center;
     }*/
   template <typename D>
-  HaliteClustering<D>::HaliteClustering (PointSource<D>& data, bool hardClustering, uint64_t cache_size, NormalizationMode normalizationMode, D pThreshold, int H, DBTYPE dbType) {
+  HaliteClustering<D>::HaliteClustering (PointSource<D>& data, bool hardClustering, uint64_t cache_size, const std::string& tmpdir, NormalizationMode normalizationMode, D pThreshold, int H, DBTYPE dbType) {
     
     // stores DIM, H, hardClustering and initialLevel
 
@@ -115,9 +115,9 @@ namespace Halite {
 
     classifier=std::make_shared<Classifier<D> >();
     classifier->hardClustering=hardClustering;
-    
+
     // builds the counting tree and inserts objects on it
-    calcTree = new stCountingTree<D>(H, dbType, cache_size, DIM);
+    calcTree = new stCountingTree<D>(H, dbType, cache_size, tmpdir, DIM);
         
     timeNormalization = clock(); //start normalization time
     readData(data, normalizationMode);

@@ -170,7 +170,7 @@ int main(int argc, char **argv) {
 	}
 
 	// creates an object of the class HaliteClustering
-	HaliteClustering<Dbl> *sCluster = new HaliteClustering<Dbl>(*datasource, argv[1], cache_size, NormalizationMode::Independent, atof(argv[2]), atoi(argv[3]), dbType);		
+	HaliteClustering<Dbl> *sCluster = new HaliteClustering<Dbl>(*datasource, argv[1], cache_size, ".", NormalizationMode::Independent, atof(argv[2]), atoi(argv[3]), dbType);		
 	
 	printf("The tree was built.\n");
 	printElapsed(); // prints the elapsed time
