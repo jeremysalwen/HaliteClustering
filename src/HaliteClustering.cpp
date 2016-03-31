@@ -404,6 +404,11 @@ namespace Halite {
   int HaliteClustering<D>::walkThroughConvolution(int level, stCell& betaClusterCenter, std::vector<stCell>& betaClusterCenterParents) {
     //try to get the db in the current level
     Db *db = calcTree->getDb(level);
+    lmdb::dbi* lmdbi = calcTree->getLMDB(level);
+    lmdb::txn* lmdbtxn = calcTree->getLMDBtxn();
+    if(!db != !lmdbi) {
+      std::cerr<<"MISMATCH: level nullity doesn't match\n";
+    }
     if (!db)
       return 0;
 
@@ -429,9 +434,14 @@ namespace Halite {
     searchData.set_ulen(serialized.size());
     searchData.set_flags(DB_DBT_USERMEM);
 
+    lmdb::val lmdb_key, lmdb_val;
+    
     // Get a cursor
     Dbc *cursorp;
     db->cursor(NULL,&cursorp,0);
+
+    lmdb::cursor lmdb_cursor = lmdb::cursor::open(*lmdbtxn, *lmdbi);
+      
 
     //prepare to walk through the level and find the
     //cell with the biggest convoluted value
@@ -444,8 +454,17 @@ namespace Halite {
     // iterate over the database, retrieving each record in turn
     int ret;
     while ((ret = cursorp->get(&searchKey, &searchData, DB_NEXT)) == 0) {
-      stCell cell = stCell::deserialize(serialized.data());
-     
+      lmdb::val ky(fullId.data(), fullId.size());
+      bool lmdb_ret = lmdb::dbi_get(*lmdbtxn, *lmdbi, ky, lmdb_val);
+	
+     if(!lmdb_ret) {
+       cerr<<"MISMATCH: lmdb could not find cursor entry\n";
+     }
+     stCell cell = stCell::deserialize(serialized.data());
+     stCell lmdb_cell = stCell::deserialize(lmdb_val.data<unsigned char>());
+     if(!(cell== lmdb_cell)) {
+       cerr<<"MISMATCH: cells fetched do not match\n";
+     }
       // Does not analyze cells analyzed before and cells that can't be the biggest convolution center.
       // It speeds up the algorithm, specially when neighbourhoodConvolutionValue <= 0
 
@@ -800,6 +819,9 @@ namespace Halite {
     size_t level=std::max(iLevel, jLevel);
  
     Db *db = calcTree->getDb(level);
+    lmdb::dbi* lmdbi = calcTree->getLMDB(level);
+    lmdb::txn* lmdbtxn = calcTree->getLMDBtxn();
+    
 
     // pointers to the parents of a cell
     std::vector<stCell> parentsVector(level, stCell(DIM));
@@ -821,10 +843,14 @@ namespace Halite {
     searchData.set_ulen(stCell::size(DIM));
     searchData.set_flags(DB_DBT_USERMEM);
 
+    lmdb::val lmdb_key, lmdb_val;
+    
     // Get a cursor
     Dbc *cursorp;
     db->cursor(NULL,&cursorp,0);
 
+    lmdb::cursor lmdb_cursor = lmdb::cursor::open(*lmdbtxn, *lmdbi);
+   
     //prepare to walk through the level
     bool belongsTo;
  
@@ -834,7 +860,16 @@ namespace Halite {
     // iterate over the database, retrieving each record in turn
     int ret;
     while ((ret = cursorp->get(&searchKey, &searchData, DB_NEXT)) == 0) {
+      lmdb::val ky(fullId.data(), (level+1)*nPos);
+      bool lmdb_ret = lmdb::dbi_get(*lmdbtxn, *lmdbi, ky, lmdb_val);
+      if(!lmdb_ret) {
+	cerr<<"MISMATCH: lmdb could not find cursor entry\n";
+      }
       stCell cell = stCell::deserialize(serialized.data());
+      stCell lmdb_cell = stCell::deserialize(lmdb_val.data<unsigned char>());
+      if(!(cell== lmdb_cell)) {
+	cerr<<"MISMATCH: cells fetched do not match\n";
+      }
       //set id for cell
       id.setIndex(&fullId[level*nPos]); //copy from fullId to id
       cell.id=id; //copy from id to cell->id
