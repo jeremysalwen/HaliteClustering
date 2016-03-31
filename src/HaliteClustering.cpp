@@ -94,10 +94,9 @@ namespace Halite {
     return center;
     }*/
   template <typename D>
-  HaliteClustering<D>::HaliteClustering (PointSource<D>& data, bool hardClustering, uint64_t cache_size, const std::string& tmpdir, NormalizationMode normalizationMode, D pThreshold, int H, DBTYPE dbType) {
+  HaliteClustering<D>::HaliteClustering (PointSource<D>& data, bool hardClustering, const std::string& tmpdir, NormalizationMode normalizationMode, D pThreshold, int H) {
     
     // stores DIM, H, hardClustering and initialLevel
-
     this->DIM=data.dimension();
     this->H = H;
     this->hardClustering = hardClustering;
@@ -117,7 +116,7 @@ namespace Halite {
     classifier->hardClustering=hardClustering;
 
     // builds the counting tree and inserts objects on it
-    calcTree = new stCountingTree<D>(H, dbType, cache_size, tmpdir, DIM);
+    calcTree = new stCountingTree<D>(H, tmpdir, DIM);
         
     timeNormalization = clock(); //start normalization time
     readData(data, normalizationMode);
@@ -403,13 +402,10 @@ namespace Halite {
   template<typename D>
   int HaliteClustering<D>::walkThroughConvolution(int level, stCell& betaClusterCenter, std::vector<stCell>& betaClusterCenterParents) {
     //try to get the db in the current level
-    Db *db = calcTree->getDb(level);
     lmdb::dbi* lmdbi = calcTree->getLMDB(level);
     lmdb::txn* lmdbtxn = calcTree->getLMDBtxn();
-    if(!db != !lmdbi) {
-      std::cerr<<"MISMATCH: level nullity doesn't match\n";
-    }
-    if (!db)
+
+    if (!lmdbi)
       return 0;
 
     // pointers to the parents of a cell
@@ -418,28 +414,13 @@ namespace Halite {
     //prepare the fullId array
     int nPos = (int) ceil((D)DIM/8);
 
-    std::vector<unsigned char> fullId((level+1)*nPos,0);
     std::vector<unsigned char> ccFullId((level+1)*nPos,0);
 
     //prepare the cell and the Dbts to receive
     //key/data pairs from the dataset
-
-    std::vector<unsigned char> serialized(stCell::size(DIM));
-
-    Dbt searchKey, searchData;
-    searchKey.set_data(fullId.data());
-    searchKey.set_ulen(fullId.size());
-    searchKey.set_flags(DB_DBT_USERMEM);
-    searchData.set_data(serialized.data());
-    searchData.set_ulen(serialized.size());
-    searchData.set_flags(DB_DBT_USERMEM);
-
     lmdb::val lmdb_key, lmdb_val;
     
     // Get a cursor
-    Dbc *cursorp;
-    db->cursor(NULL,&cursorp,0);
-
     lmdb::cursor lmdb_cursor = lmdb::cursor::open(*lmdbtxn, *lmdbi);
       
 
@@ -452,32 +433,22 @@ namespace Halite {
     std::vector<D> minCell(DIM, 0.0);
 
     // iterate over the database, retrieving each record in turn
-    int ret;
-    while ((ret = cursorp->get(&searchKey, &searchData, DB_NEXT)) == 0) {
-      lmdb::val ky(fullId.data(), fullId.size());
-      bool lmdb_ret = lmdb::dbi_get(*lmdbtxn, *lmdbi, ky, lmdb_val);
-	
-     if(!lmdb_ret) {
-       cerr<<"MISMATCH: lmdb could not find cursor entry\n";
-     }
-     stCell cell = stCell::deserialize(serialized.data());
-     stCell lmdb_cell = stCell::deserialize(lmdb_val.data<unsigned char>());
-     if(!(cell== lmdb_cell)) {
-       cerr<<"MISMATCH: cells fetched do not match\n";
-     }
+    while (lmdb_cursor.get(lmdb_key, lmdb_val, MDB_NEXT)) {
+     stCell cell = stCell::deserialize(lmdb_val.data<unsigned char>());
+
       // Does not analyze cells analyzed before and cells that can't be the biggest convolution center.
       // It speeds up the algorithm, specially when neighbourhoodConvolutionValue <= 0
 
       if (!( (!cell.getUsedCell()) && ( (neighbourhoodConvolutionValue > 0) ||
 					((cell.getSumOfPoints()*centralConvolutionValue) > biggestConvolutionValue) ||
 					( ((cell.getSumOfPoints()*centralConvolutionValue) == biggestConvolutionValue) &&
-					  (memcmp(fullId.data(), ccFullId.data(), fullId.size()) < 0) ) ) )) {
+					  (memcmp(lmdb_key.data(), ccFullId.data(), lmdb_key.size()) < 0) ) ) )) {
 	continue;
       }
       //set id for cell
-      cell.id.setIndex(&fullId[level*nPos]);
+      cell.id.setIndex(lmdb_key.data<unsigned char>()+ level*nPos);
       //finds the parents of cell
-      calcTree->findParents(fullId.data(),parentsVector,level);
+      calcTree->findParents(lmdb_key.data<unsigned char>(),parentsVector,level);
 
       // discovers the position of cell in the data space
       cellPosition(cell,parentsVector,minCell,maxCell,level);
@@ -509,12 +480,12 @@ namespace Halite {
       }//end if
 
       if ( (newConvolutionValue > biggestConvolutionValue) ||
-	   ((newConvolutionValue == biggestConvolutionValue) && (memcmp(fullId.data(), ccFullId.data(), fullId.size()) < 0))) {
+	   ((newConvolutionValue == biggestConvolutionValue) && (memcmp(lmdb_key.data(), ccFullId.data(), lmdb_key.size()) < 0))) {
 
 	// until now, cell is the biggest convolution value, thus, set the new biggest value and copy
 	// cell and its parents to betaClusterCenter and its parents
 	biggestConvolutionValue = newConvolutionValue;
-	std::copy(fullId.begin(), fullId.end(), ccFullId.begin());
+	std::copy(lmdb_key.data(), lmdb_key.data()+lmdb_key.size(), ccFullId.begin());
 	
 	betaClusterCenter=cell;
 	for (int j = 0;j<level;j++) {
@@ -522,15 +493,10 @@ namespace Halite {
 	}//end for
       }//end if
     }//end while
-    if (ret != DB_NOTFOUND) { //it should never enter here
-      cout << "Error!" << endl;
-      return 0; //error
-    }
+ 
 
     //closes the cursor
-    if (cursorp != NULL) {
-      cursorp->close();
-    }
+    lmdb_cursor.close();
 
     return 1; //Success
   }//end HaliteClustering::walkThroughConvolution
@@ -817,8 +783,7 @@ namespace Halite {
     if(iCl!=NULL) iLevel = iCl->level;
     if(jCl!=NULL) jLevel = jCl->level;
     size_t level=std::max(iLevel, jLevel);
- 
-    Db *db = calcTree->getDb(level);
+  
     lmdb::dbi* lmdbi = calcTree->getLMDB(level);
     lmdb::txn* lmdbtxn = calcTree->getLMDBtxn();
     
@@ -828,27 +793,10 @@ namespace Halite {
 
     //prepare the fullId array
     size_t nPos = (DIM + 7) / 8;
-    std::vector<unsigned char> fullId((level+1)*nPos,0);
-
-    //prepare the cell and the Dbts to receive
-    //key/data pairs from the dataset
-    std::vector<unsigned char> serialized(stCell::size(DIM));
-    
-    stCellId id(DIM);
-    Dbt searchKey, searchData;
-    searchKey.set_data(fullId.data());
-    searchKey.set_ulen((level+1)*nPos);
-    searchKey.set_flags(DB_DBT_USERMEM);
-    searchData.set_data(serialized.data());
-    searchData.set_ulen(stCell::size(DIM));
-    searchData.set_flags(DB_DBT_USERMEM);
 
     lmdb::val lmdb_key, lmdb_val;
     
     // Get a cursor
-    Dbc *cursorp;
-    db->cursor(NULL,&cursorp,0);
-
     lmdb::cursor lmdb_cursor = lmdb::cursor::open(*lmdbtxn, *lmdbi);
    
     //prepare to walk through the level
@@ -858,23 +806,14 @@ namespace Halite {
     std::vector<D> minCell(DIM, 0.0);
 
     // iterate over the database, retrieving each record in turn
-    int ret;
-    while ((ret = cursorp->get(&searchKey, &searchData, DB_NEXT)) == 0) {
-      lmdb::val ky(fullId.data(), (level+1)*nPos);
-      bool lmdb_ret = lmdb::dbi_get(*lmdbtxn, *lmdbi, ky, lmdb_val);
-      if(!lmdb_ret) {
-	cerr<<"MISMATCH: lmdb could not find cursor entry\n";
-      }
-      stCell cell = stCell::deserialize(serialized.data());
-      stCell lmdb_cell = stCell::deserialize(lmdb_val.data<unsigned char>());
-      if(!(cell== lmdb_cell)) {
-	cerr<<"MISMATCH: cells fetched do not match\n";
-      }
+    while (lmdb_cursor.get(lmdb_key, lmdb_val, MDB_NEXT)) {
+      stCell cell = stCell::deserialize(lmdb_val.data<unsigned char>());
+      
       //set id for cell
-      id.setIndex(&fullId[level*nPos]); //copy from fullId to id
-      cell.id=id; //copy from id to cell->id
+      cell.id.setIndex(lmdb_key.data<unsigned char>() + level*nPos);
+      
       //finds the parents of cell
-      calcTree->findParents(fullId.data(),parentsVector,level);
+      calcTree->findParents(lmdb_key.data<unsigned char>(),parentsVector,level);
       // discovers the position of cell in the data space
       cellPosition(cell,parentsVector,minCell,maxCell,level);
 
@@ -899,16 +838,12 @@ namespace Halite {
       }
 
     }
-    if (ret != DB_NOTFOUND) { //it should never enter here
-      cout << "Error!" << endl;
-    }
-
     
     //closes the cursor
-    cursorp->close();
+    lmdb_cursor.close();
 
     //copy cluster to clusterMat (OpenCV format)
-    cv::Mat clusterMat(cluster.size(),DIM,cv::DataType<D>::type);
+    cv::Mat clusterMat(cluster.size(), DIM, cv::DataType<D>::type);
     for (size_t p=0; p<cluster.size(); p++) {
       for (size_t d=0; d<DIM; d++) {
 	clusterMat.at<D>(p,d) = cluster[p][d];
