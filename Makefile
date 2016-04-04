@@ -2,8 +2,8 @@ CXX := g++
 SRC := $(wildcard src/*.cpp) $(wildcard src/arboretum/*.cpp) 
 OBJ := $(SRC:.cpp=.o)
 
-CXXFLAGS := -Iinclude `pkg-config --cflags opencv` -O2 -g -fPIC -Wall -Wextra -std=c++11 -pedantic
-LDFLAGS := -llmdb -lboost_system -lboost_filesystem  `pkg-config --libs opencv` -O2 -g
+CXXFLAGS := -Iinclude `pkg-config --cflags opencv` -O3 -g -fPIC -Wall -Wextra -std=c++11 -pedantic
+LDFLAGS := -llmdb -lboost_system -lboost_filesystem  `pkg-config --libs opencv` -O3 -g
 
 all: Halite libhalite.so
 
