@@ -436,15 +436,23 @@ namespace Halite {
     while (lmdb_cursor.get(lmdb_key, lmdb_val, MDB_NEXT)) {
      stCell cell = stCell::deserialize(lmdb_val.data<unsigned char>());
 
-      // Does not analyze cells analyzed before and cells that can't be the biggest convolution center.
-      // It speeds up the algorithm, specially when neighbourhoodConvolutionValue <= 0
+      
+     //Does not analyze cells analyzed before
+       
+     if(cell.getUsedCell()) {
+       continue;
+     }
+     // Does not analyze cells that can't be the biggest convolution center.
+     // It speeds up the algorithm when neighbourhoodConvolutionValue <= 0
 
-      if (!( (!cell.getUsedCell()) && ( (neighbourhoodConvolutionValue > 0) ||
-					((cell.getSumOfPoints()*centralConvolutionValue) > biggestConvolutionValue) ||
-					( ((cell.getSumOfPoints()*centralConvolutionValue) == biggestConvolutionValue) &&
-					  (memcmp(lmdb_key.data(), ccFullId.data(), lmdb_key.size()) < 0) ) ) )) {
-	continue;
-      }
+     if(neighbourhoodConvolutionValue<=0) {
+       if(cell.getSumOfPoints()*centralConvolutionValue < biggestConvolutionValue
+	  || (cell.getSumOfPoints()*centralConvolutionValue == biggestConvolutionValue
+	      &&  memcmp(lmdb_key.data(), ccFullId.data(), lmdb_key.size())>=0)) {
+	 continue;
+       }
+     }
+
       //set id for cell
       cell.id.setIndex(lmdb_key.data<unsigned char>()+ level*nPos);
       //finds the parents of cell
